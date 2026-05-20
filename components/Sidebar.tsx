@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { NoteList } from "@/components/NoteList";
 import type { Note } from "@/types/note";
@@ -12,7 +12,9 @@ type SidebarProps = {
   isDark: boolean;
   notes: Note[];
   selectedNoteId: string;
+  onCreateLongTestNote: () => void;
   onCreateNote: () => void;
+  onCreateSampleNotes: () => void;
   onDeleteNote: (id: string) => void;
   onResetNotes: () => void;
   onSelectNote: (id: string) => void;
@@ -23,7 +25,9 @@ export function Sidebar({
   isDark,
   notes,
   selectedNoteId,
+  onCreateLongTestNote,
   onCreateNote,
+  onCreateSampleNotes,
   onDeleteNote,
   onResetNotes,
   onSelectNote,
@@ -34,11 +38,22 @@ export function Sidebar({
   const [draftUserName, setDraftUserName] = useState(DEFAULT_USER_NAME);
   const [isEditingUserName, setIsEditingUserName] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTagFilterOpen, setIsTagFilterOpen] = useState(true);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const normalizedSearchText = searchText.trim().toLowerCase();
   const displayUserName = userName.trim() || "\u3042\u306a\u305f";
   const sortedNotes = [...notes].sort((firstNote, secondNote) =>
     secondNote.updatedAt.localeCompare(firstNote.updatedAt),
+  );
+  // flatMap gathers every tag from every note into one array.
+  // Set removes duplicates, so the sidebar shows each tag only once.
+  const allTags = useMemo(
+    () =>
+      Array.from(new Set(notes.flatMap((note) => note.tags))).sort(
+        (firstTag, secondTag) => firstTag.localeCompare(secondTag),
+      ),
+    [notes],
   );
 
   useEffect(() => {
@@ -50,17 +65,34 @@ export function Sidebar({
     }
   }, []);
 
+  useEffect(() => {
+    const existingSelectedTags = selectedTags.filter((tag) =>
+      allTags.includes(tag),
+    );
+
+    if (existingSelectedTags.length !== selectedTags.length) {
+      setSelectedTags(existingSelectedTags);
+    }
+  }, [allTags, selectedTags]);
+
   // filter creates a new array and does not change the original notes data.
-  // This checks both the title and content for the search text.
+  // This checks the title, content, and tags for the search text.
   const filteredNotes = sortedNotes.filter((note) => {
     const title = note.title.toLowerCase();
     const content = note.content.toLowerCase();
-
-    return (
+    const tags = note.tags.join(" ").toLowerCase();
+    // every checks that the note has all selected tags.
+    // This makes the tag filter work with two or more tags.
+    const matchesSelectedTags = selectedTags.every((tag) =>
+      note.tags.includes(tag),
+    );
+    const matchesSearchText =
       normalizedSearchText === "" ||
       title.includes(normalizedSearchText) ||
-      content.includes(normalizedSearchText)
-    );
+      content.includes(normalizedSearchText) ||
+      tags.includes(normalizedSearchText);
+
+    return matchesSelectedTags && matchesSearchText;
   });
 
   function startEditingUserName() {
@@ -84,6 +116,24 @@ export function Sidebar({
   function handleResetNotes() {
     onResetNotes();
     setIsSettingsOpen(false);
+  }
+
+  function handleCreateLongTestNote() {
+    onCreateLongTestNote();
+    setIsSettingsOpen(false);
+  }
+
+  function handleCreateSampleNotes() {
+    onCreateSampleNotes();
+    setIsSettingsOpen(false);
+  }
+
+  function toggleSelectedTag(tag: string) {
+    setSelectedTags((currentTags) =>
+      currentTags.includes(tag)
+        ? currentTags.filter((currentTag) => currentTag !== tag)
+        : [...currentTags, tag],
+    );
   }
 
   return (
@@ -158,6 +208,86 @@ export function Sidebar({
           />
         </div>
 
+        {allTags.length > 0 && (
+          <div className="mb-3 px-1">
+            <div className="mb-1.5 flex items-center gap-2">
+              <button
+                onClick={() => setIsTagFilterOpen((isOpen) => !isOpen)}
+                className={`flex min-w-0 flex-1 items-center gap-1 rounded px-1 py-1 text-left text-xs font-medium transition ${
+                  isDark
+                    ? "text-[#9b9b9b] hover:bg-[#2b2b2b]"
+                    : "text-[#78746d] hover:bg-[#e7e3dd]"
+                }`}
+                aria-expanded={isTagFilterOpen}
+              >
+                <svg
+                  aria-hidden="true"
+                  className={`h-3.5 w-3.5 shrink-0 transition-transform ${
+                    isTagFilterOpen ? "-rotate-90" : "rotate-180"
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+                <span>{"\u30bf\u30b0"}</span>
+                {selectedTags.length > 0 && (
+                  <span
+                    className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] ${
+                      isDark
+                        ? "bg-[#333333] text-[#d6d6d6]"
+                        : "bg-white text-[#5f5a52]"
+                    }`}
+                  >
+                    {selectedTags.length}
+                    {"\u4ef6"}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedTags([])}
+                disabled={selectedTags.length === 0}
+                className={`shrink-0 rounded px-1.5 py-1 text-xs transition disabled:cursor-default disabled:opacity-40 ${
+                  isDark
+                    ? "text-[#bdbdbd] hover:bg-[#2d2d2d] disabled:hover:bg-transparent"
+                    : "text-[#6f6a62] hover:bg-[#eee9e1] disabled:hover:bg-transparent"
+                }`}
+                aria-label={"\u30bf\u30b0\u9078\u629e\u3092\u30af\u30ea\u30a2"}
+              >
+                {"\u00d7 \u30af\u30ea\u30a2"}
+              </button>
+            </div>
+
+            {isTagFilterOpen && (
+              <div className="flex flex-wrap gap-1.5">
+                {allTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => toggleSelectedTag(tag)}
+                    className={`max-w-full truncate rounded-full border px-2 py-1 text-xs transition ${
+                      selectedTags.includes(tag)
+                        ? isDark
+                          ? "border-[#555555] bg-[#333333] text-[#f1f1f1]"
+                          : "border-[#cfc7bc] bg-white text-[#37352f] shadow-sm"
+                        : isDark
+                          ? "border-[#333333] bg-[#242424] text-[#bdbdbd] hover:bg-[#2d2d2d]"
+                          : "border-[#e1ddd5] bg-[#f7f4ee] text-[#6f6a62] hover:bg-[#eee9e1]"
+                    }`}
+                    title={tag}
+                    aria-pressed={selectedTags.includes(tag)}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <button
           onClick={onCreateNote}
           className={`mb-2 w-full rounded-md px-3 py-2 text-left text-sm transition ${
@@ -226,6 +356,28 @@ export function Sidebar({
                 : "border-[#e4e1dc] bg-[#fbfaf8]"
             }`}
           >
+            <button
+              onClick={handleCreateLongTestNote}
+              className={`w-full rounded px-3 py-2 text-left text-sm transition ${
+                isDark
+                  ? "text-[#e6e6e6] hover:bg-[#303030]"
+                  : "text-[#4f4b45] hover:bg-[#eeeae4]"
+              }`}
+            >
+              {"\u9577\u6587\u30c6\u30b9\u30c8\u30e1\u30e2\u3092\u8ffd\u52a0"}
+            </button>
+
+            <button
+              onClick={handleCreateSampleNotes}
+              className={`w-full rounded px-3 py-2 text-left text-sm transition ${
+                isDark
+                  ? "text-[#e6e6e6] hover:bg-[#303030]"
+                  : "text-[#4f4b45] hover:bg-[#eeeae4]"
+              }`}
+            >
+              {"\u30b5\u30f3\u30d7\u30eb\u30e1\u30e210\u4ef6\u3092\u8ffd\u52a0"}
+            </button>
+
             <button
               onClick={handleResetNotes}
               className={`w-full rounded px-3 py-2 text-left text-sm transition ${

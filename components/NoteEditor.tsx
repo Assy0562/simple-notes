@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { Note } from "@/types/note";
 
@@ -10,6 +10,7 @@ type NoteEditorProps = {
   saveStatus: "idle" | "saving" | "saved";
   titleFocusRequest: number;
   onUpdateNote: (field: "title" | "content", value: string) => void;
+  onUpdateTags: (tags: string[]) => void;
 };
 
 export function NoteEditor({
@@ -18,14 +19,20 @@ export function NoteEditor({
   saveStatus,
   titleFocusRequest,
   onUpdateNote,
+  onUpdateTags,
 }: NoteEditorProps) {
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const [tagDraft, setTagDraft] = useState("");
 
   useEffect(() => {
     if (titleFocusRequest > 0) {
       titleInputRef.current?.focus();
     }
   }, [titleFocusRequest]);
+
+  useEffect(() => {
+    setTagDraft("");
+  }, [note.id]);
 
   const saveText =
     saveStatus === "saving"
@@ -46,7 +53,45 @@ export function NoteEditor({
     <section className="flex-1 px-8 py-10">
       <article className="mx-auto max-w-3xl">
         <div
-          className={`mb-6 flex items-center justify-between border-b pb-4 text-xs ${
+          className={`mb-6 border-b pb-4 text-xs ${
+            isDark
+              ? "border-[#2f2f2f] text-[#9b9b9b]"
+              : "border-[#e4e1dc] text-[#8a857d]"
+          }`}
+        >
+          <TagInput
+            isDark={isDark}
+            note={note}
+            tagDraft={tagDraft}
+            onAddTag={addTag}
+            onRemoveTag={removeTag}
+            onChangeTagDraft={setTagDraft}
+          />
+        </div>
+
+        <input
+          ref={titleInputRef}
+          value={note.title}
+          onChange={(event) => onUpdateNote("title", event.target.value)}
+          className={`mb-6 w-full bg-transparent text-4xl font-bold tracking-normal outline-none ${
+            isDark ? "placeholder:text-[#666666]" : "placeholder:text-[#b9b4ac]"
+          }`}
+          placeholder={"\u7121\u984c\u306e\u30e1\u30e2"}
+        />
+
+        <textarea
+          value={note.content}
+          onChange={(event) => onUpdateNote("content", event.target.value)}
+          className={`min-h-[520px] w-full resize-none border-none bg-transparent text-base leading-8 outline-none ${
+            isDark
+              ? "text-[#dedede] placeholder:text-[#666666]"
+              : "text-[#37352f] placeholder:text-[#b9b4ac]"
+          }`}
+          placeholder={"\u30e1\u30e2\u3092\u66f8\u3044\u3066\u304f\u3060\u3055\u3044..."}
+        />
+
+        <div
+          className={`mt-6 flex items-center justify-between gap-5 border-t pt-4 text-xs ${
             isDark
               ? "border-[#2f2f2f] text-[#9b9b9b]"
               : "border-[#e4e1dc] text-[#8a857d]"
@@ -80,28 +125,110 @@ export function NoteEditor({
             </div>
           )}
         </div>
-
-        <input
-          ref={titleInputRef}
-          value={note.title}
-          onChange={(event) => onUpdateNote("title", event.target.value)}
-          className={`mb-6 w-full bg-transparent text-4xl font-bold tracking-normal outline-none ${
-            isDark ? "placeholder:text-[#666666]" : "placeholder:text-[#b9b4ac]"
-          }`}
-          placeholder={"\u7121\u984c\u306e\u30e1\u30e2"}
-        />
-
-        <textarea
-          value={note.content}
-          onChange={(event) => onUpdateNote("content", event.target.value)}
-          className={`min-h-[520px] w-full resize-none border-none bg-transparent text-base leading-8 outline-none ${
-            isDark
-              ? "text-[#dedede] placeholder:text-[#666666]"
-              : "text-[#37352f] placeholder:text-[#b9b4ac]"
-          }`}
-          placeholder={"\u30e1\u30e2\u3092\u66f8\u3044\u3066\u304f\u3060\u3055\u3044..."}
-        />
       </article>
     </section>
+  );
+
+  function addTag() {
+    const nextTag = tagDraft.trim();
+
+    if (nextTag === "" || note.tags.includes(nextTag)) {
+      setTagDraft("");
+      return;
+    }
+
+    // Add one tag to the existing array without changing the old array directly.
+    onUpdateTags([...note.tags, nextTag]);
+    setTagDraft("");
+  }
+
+  function removeTag(tagToRemove: string) {
+    // filter creates a new array that excludes the clicked tag.
+    onUpdateTags(note.tags.filter((tag) => tag !== tagToRemove));
+  }
+}
+
+type TagInputProps = {
+  isDark: boolean;
+  note: Note;
+  tagDraft: string;
+  onAddTag: () => void;
+  onRemoveTag: (tag: string) => void;
+  onChangeTagDraft: (value: string) => void;
+};
+
+function TagInput({
+  isDark,
+  note,
+  tagDraft,
+  onAddTag,
+  onRemoveTag,
+  onChangeTagDraft,
+}: TagInputProps) {
+  return (
+    <div
+      className={`flex min-h-11 flex-wrap items-center gap-2 rounded-md border px-3 py-2 transition ${
+        isDark
+          ? "border-[#303030] bg-[#1f1f1f] focus-within:border-[#555555]"
+          : "border-[#ded9d1] bg-[#fbfaf8] focus-within:border-[#b9b2a7]"
+      }`}
+    >
+      <svg
+        aria-hidden="true"
+        className={`h-4 w-4 shrink-0 ${
+          isDark ? "text-[#8f8f8f]" : "text-[#8a857d]"
+        }`}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      >
+        <path d="M3 3h8.5L21 12.5 12.5 21 3 11.5V3Z" />
+        <circle cx="8.5" cy="8.5" r="0.8" fill="currentColor" stroke="none" />
+      </svg>
+
+      {note.tags.map((tag) => (
+        <span
+          key={tag}
+          className={`flex items-center gap-1 rounded-full border px-2 py-1 text-xs ${
+            isDark
+              ? "border-[#3a3a3a] bg-[#282828] text-[#d6d6d6]"
+              : "border-[#e1ddd5] bg-[#f4f1eb] text-[#5f5a52]"
+          }`}
+        >
+          <span>{tag}</span>
+          <button
+            type="button"
+            onClick={() => onRemoveTag(tag)}
+            className={`rounded-full px-1 transition ${
+              isDark
+                ? "text-[#a8a8a8] hover:bg-[#3a3a3a] hover:text-[#f1f1f1]"
+                : "text-[#8a857d] hover:bg-[#e4ded5] hover:text-[#37352f]"
+            }`}
+            aria-label={`${tag} \u3092\u524a\u9664`}
+          >
+            {"\u00d7"}
+          </button>
+        </span>
+      ))}
+
+      <input
+        value={tagDraft}
+        onChange={(event) => onChangeTagDraft(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onAddTag();
+          }
+        }}
+        className={`min-w-32 flex-1 bg-transparent text-sm outline-none ${
+          isDark
+            ? "text-[#e6e6e6] placeholder:text-[#666666]"
+            : "text-[#37352f] placeholder:text-[#9b968e]"
+        }`}
+        placeholder={"+ \u30bf\u30b0\u3092\u8ffd\u52a0"}
+        aria-label={"\u30bf\u30b0\u540d\u3092\u5165\u529b\u3057\u3066 Enter \u3067\u8ffd\u52a0"}
+      />
+    </div>
   );
 }

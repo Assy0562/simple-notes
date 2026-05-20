@@ -10,6 +10,7 @@ export const initialNotes: Note[] = [
       "\u307e\u305a\u306f\u5c0f\u3055\u306a\u753b\u9762\u304b\u3089\u4f5c\u308a\u307e\u3059\u3002\n" +
       "\u5de6\u306b\u30e1\u30e2\u4e00\u89a7\u3001\u53f3\u306b\u672c\u6587\u30a8\u30ea\u30a2\u3092\u7f6e\u304d\u307e\u3059\u3002\n" +
       "\u4fdd\u5b58\u6a5f\u80fd\u306f localStorage \u3067\u6271\u3044\u307e\u3059\u3002",
+    tags: ["\u958b\u767a", "\u5b66\u7fd2"],
     createdAt: "2026/05/18",
     updatedAt: "2026/05/18",
   },
@@ -19,6 +20,7 @@ export const initialNotes: Note[] = [
     content:
       "Note \u578b\u3092\u5148\u306b\u4f5c\u308b\u3068\u3001\u30e1\u30e2\u304c\u6301\u3064\u60c5\u5831\u304c\u308f\u304b\u308a\u3084\u3059\u304f\u306a\u308a\u307e\u3059\u3002\n" +
       "\u6700\u521d\u306f\u578b\u3092\u5c0f\u3055\u304f\u4fdd\u3064\u3068\u8aad\u307f\u3084\u3059\u3044\u3067\u3059\u3002",
+    tags: ["TypeScript"],
     createdAt: "2026/05/17",
     updatedAt: "2026/05/17",
   },
@@ -27,6 +29,7 @@ export const initialNotes: Note[] = [
     title: "\u30a2\u30a4\u30c7\u30a2",
     content:
       "Notion \u98a8\u306b\u3001\u4f59\u767d\u3092\u5e83\u3081\u306b\u3057\u3066\u843d\u3061\u7740\u3044\u305f\u898b\u305f\u76ee\u306b\u3057\u307e\u3059\u3002",
+    tags: ["UI", "\u30a2\u30a4\u30c7\u30a2"],
     createdAt: "2026/05/16",
     updatedAt: "2026/05/16",
   },
@@ -70,10 +73,15 @@ function normalizeNote(value: unknown): Note | null {
     return null;
   }
 
+  const tags = Array.isArray(value.tags)
+    ? value.tags.filter((tag): tag is string => typeof tag === "string")
+    : [];
+
   return {
     id: String(value.id),
     title: value.title,
     content: value.content,
+    tags,
     createdAt:
       typeof value.createdAt === "string" ? value.createdAt : value.updatedAt,
     updatedAt: value.updatedAt,
