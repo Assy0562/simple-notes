@@ -33,21 +33,52 @@ export function NoteEditor({
       : saveStatus === "saved"
         ? "\u4fdd\u5b58\u6e08\u307f"
         : "";
+  const saveDotClass =
+    saveStatus === "saving"
+      ? "bg-[#d99a2b]"
+      : saveStatus === "saved"
+        ? "bg-[#4f9f68]"
+        : isDark
+          ? "bg-[#777777]"
+          : "bg-[#b9b4ac]";
 
   return (
     <section className="flex-1 px-8 py-10">
       <article className="mx-auto max-w-3xl">
         <div
-          className={`mb-6 flex items-center justify-between text-xs ${
-            isDark ? "text-[#9b9b9b]" : "text-[#8a857d]"
+          className={`mb-6 flex items-center justify-between border-b pb-4 text-xs ${
+            isDark
+              ? "border-[#2f2f2f] text-[#9b9b9b]"
+              : "border-[#e4e1dc] text-[#8a857d]"
           }`}
         >
-          <p>
-            {"\u4f5c\u6210\u65e5"}: {note.createdAt}
-            <span className="mx-2">/</span>
-            {"\u66f4\u65b0\u65e5"}: {note.updatedAt}
-          </p>
-          <p>{saveText}</p>
+          <dl className="flex items-center gap-5">
+            <div className="flex items-center gap-1.5">
+              <dt>{"\u4f5c\u6210"}</dt>
+              <dd className={isDark ? "text-[#c9c9c9]" : "text-[#5f5a52]"}>
+                {note.createdAt}
+              </dd>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <dt>{"\u66f4\u65b0"}</dt>
+              <dd className={isDark ? "text-[#c9c9c9]" : "text-[#5f5a52]"}>
+                {note.updatedAt}
+              </dd>
+            </div>
+          </dl>
+
+          {saveText && (
+            <div
+              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${
+                isDark
+                  ? "border-[#333333] bg-[#202020] text-[#c9c9c9]"
+                  : "border-[#e4e1dc] bg-[#fbfaf8] text-[#5f5a52]"
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${saveDotClass}`} />
+              <span>{saveText}</span>
+            </div>
+          )}
         </div>
 
         <input
