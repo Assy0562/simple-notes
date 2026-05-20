@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { NoteList } from "@/components/NoteList";
 import type { Note } from "@/types/note";
+
+const USER_NAME_KEY = "simple-notion-user-name";
+const DEFAULT_USER_NAME = "Assy0562";
 
 type SidebarProps = {
   isDark: boolean;
@@ -27,11 +30,24 @@ export function Sidebar({
   onToggleTheme,
 }: SidebarProps) {
   const [searchText, setSearchText] = useState("");
+  const [userName, setUserName] = useState(DEFAULT_USER_NAME);
+  const [draftUserName, setDraftUserName] = useState(DEFAULT_USER_NAME);
+  const [isEditingUserName, setIsEditingUserName] = useState(false);
 
   const normalizedSearchText = searchText.trim().toLowerCase();
+  const displayUserName = userName.trim() || "\u3042\u306a\u305f";
   const sortedNotes = [...notes].sort((firstNote, secondNote) =>
     secondNote.updatedAt.localeCompare(firstNote.updatedAt),
   );
+
+  useEffect(() => {
+    const savedUserName = localStorage.getItem(USER_NAME_KEY);
+
+    if (savedUserName) {
+      setUserName(savedUserName);
+      setDraftUserName(savedUserName);
+    }
+  }, []);
 
   // filter creates a new array and does not change the original notes data.
   // This checks both the title and content for the search text.
@@ -46,6 +62,24 @@ export function Sidebar({
     );
   });
 
+  function startEditingUserName() {
+    setDraftUserName(userName);
+    setIsEditingUserName(true);
+  }
+
+  function saveUserName() {
+    const nextUserName = draftUserName.trim();
+
+    setUserName(nextUserName);
+    localStorage.setItem(USER_NAME_KEY, nextUserName);
+    setIsEditingUserName(false);
+  }
+
+  function cancelEditingUserName() {
+    setDraftUserName(userName);
+    setIsEditingUserName(false);
+  }
+
   return (
     <aside
       className={`flex w-72 flex-col border-r px-3 py-4 transition-colors ${
@@ -56,16 +90,40 @@ export function Sidebar({
     >
       <div className="min-h-0 flex-1">
         <div className="mb-5 px-2">
-          <h1 className="text-sm font-semibold">
-            {"\u30b7\u30f3\u30d7\u30eb\u30e1\u30e2"}
-          </h1>
-          <p
-            className={`mt-1 text-xs ${
-              isDark ? "text-[#9b9b9b]" : "text-[#78746d]"
-            }`}
-          >
-            {"Notion\u98a8\u30e1\u30e2\u30a2\u30d7\u30ea"}
-          </p>
+          {isEditingUserName ? (
+            <input
+              autoFocus
+              value={draftUserName}
+              onBlur={saveUserName}
+              onChange={(event) => setDraftUserName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  saveUserName();
+                }
+
+                if (event.key === "Escape") {
+                  cancelEditingUserName();
+                }
+              }}
+              className={`w-full rounded-md border px-2 py-1 text-sm font-semibold outline-none transition ${
+                isDark
+                  ? "border-[#3a3a3a] bg-[#1b1b1b] text-[#ededed] focus:border-[#555555]"
+                  : "border-[#ded9d1] bg-[#f7f7f5] text-[#2f2f2f] focus:border-[#b9b2a7]"
+              }`}
+              placeholder={"\u30e6\u30fc\u30b6\u30fc\u540d"}
+            />
+          ) : (
+            <button
+              onClick={startEditingUserName}
+              className={`block w-full rounded-md px-2 py-1 text-left text-sm font-semibold transition ${
+                isDark ? "hover:bg-[#2b2b2b]" : "hover:bg-[#e7e3dd]"
+              }`}
+              title={"\u30e6\u30fc\u30b6\u30fc\u540d\u3092\u7de8\u96c6"}
+            >
+              {displayUserName}
+              {"\u306e\u30e1\u30e2\u5e33"}
+            </button>
+          )}
         </div>
 
         <div className="relative mb-2">
