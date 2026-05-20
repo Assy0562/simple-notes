@@ -33,6 +33,7 @@ export function Sidebar({
   const [userName, setUserName] = useState(DEFAULT_USER_NAME);
   const [draftUserName, setDraftUserName] = useState(DEFAULT_USER_NAME);
   const [isEditingUserName, setIsEditingUserName] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const normalizedSearchText = searchText.trim().toLowerCase();
   const displayUserName = userName.trim() || "\u3042\u306a\u305f";
@@ -78,6 +79,11 @@ export function Sidebar({
   function cancelEditingUserName() {
     setDraftUserName(userName);
     setIsEditingUserName(false);
+  }
+
+  function handleResetNotes() {
+    onResetNotes();
+    setIsSettingsOpen(false);
   }
 
   return (
@@ -153,17 +159,6 @@ export function Sidebar({
         </div>
 
         <button
-          onClick={onResetNotes}
-          className={`mb-3 rounded-md px-3 py-1.5 text-left text-xs transition ${
-            isDark
-              ? "text-[#cfcfcf] hover:bg-[#2b2b2b]"
-              : "text-[#5f5a52] hover:bg-[#e7e3dd]"
-          }`}
-        >
-          {"\u30ea\u30bb\u30c3\u30c8"}
-        </button>
-
-        <button
           onClick={onCreateNote}
           className={`mb-2 w-full rounded-md px-3 py-2 text-left text-sm transition ${
             isDark
@@ -195,10 +190,55 @@ export function Sidebar({
       </div>
 
       <div
-        className={`mt-4 flex justify-end border-t px-2 pt-3 ${
+        className={`relative mt-4 flex justify-between border-t px-2 pt-3 ${
           isDark ? "border-[#303030]" : "border-[#e4e1dc]"
         }`}
       >
+        <button
+          onClick={() => setIsSettingsOpen((isOpen) => !isOpen)}
+          className={`flex h-8 w-8 items-center justify-center rounded-full border transition ${
+            isDark
+              ? "border-[#3a3a3a] bg-[#262626] text-[#e6e6e6] hover:bg-[#303030]"
+              : "border-[#ded9d1] bg-[#f7f7f5] text-[#5f5a52] hover:bg-[#e7e3dd]"
+          }`}
+          title={"\u8a2d\u5b9a"}
+          aria-label={"\u8a2d\u5b9a"}
+          aria-expanded={isSettingsOpen}
+        >
+          <svg
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          >
+            <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 0 1-2.83 2.83l-.04-.04A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.05a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 0 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.05a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 0 1 2.83-2.83l.04.04A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.05a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 0 1 2.83 2.83l-.04.04A1.7 1.7 0 0 0 19.4 9c.22.62.8 1 1.55 1H21a2 2 0 0 1 0 4h-.05a1.7 1.7 0 0 0-1.55 1Z" />
+          </svg>
+        </button>
+
+        {isSettingsOpen && (
+          <div
+            className={`absolute bottom-14 left-2 w-44 rounded-md border p-1 shadow-lg ${
+              isDark
+                ? "border-[#333333] bg-[#252525]"
+                : "border-[#e4e1dc] bg-[#fbfaf8]"
+            }`}
+          >
+            <button
+              onClick={handleResetNotes}
+              className={`w-full rounded px-3 py-2 text-left text-sm transition ${
+                isDark
+                  ? "text-[#e6e6e6] hover:bg-[#303030]"
+                  : "text-[#4f4b45] hover:bg-[#eeeae4]"
+              }`}
+            >
+              {"\u521d\u671f\u30e1\u30e2\u306b\u623b\u3059"}
+            </button>
+          </div>
+        )}
+
         <button
           onClick={onToggleTheme}
           className={`flex h-8 w-8 items-center justify-center rounded-full border transition ${
