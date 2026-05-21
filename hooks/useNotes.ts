@@ -220,12 +220,21 @@ export function useNotes() {
       return;
     }
 
-    const nextNotes = notes.filter((note) => note.id !== noteId);
+    deleteNotes([noteId]);
+  }
+
+  function deleteNotes(noteIds: string[]) {
+    const idsToDelete = new Set(noteIds);
+    const nextNotes = notes.filter((note) => !idsToDelete.has(note.id));
+
+    if (nextNotes.length === 0) {
+      return;
+    }
 
     setNotes(nextNotes);
 
-    // If the deleted note was open, select the first remaining note.
-    if (noteId === selectedNoteId) {
+    // If the open note was deleted, select the first remaining note.
+    if (idsToDelete.has(selectedNoteId)) {
       setSelectedNoteId(nextNotes[0].id);
     }
   }
@@ -253,6 +262,7 @@ export function useNotes() {
     createNote,
     createSampleNotes,
     deleteNote,
+    deleteNotes,
     resetNotes,
     selectNote: setSelectedNoteId,
     updateSelectedNote,

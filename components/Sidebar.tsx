@@ -16,6 +16,7 @@ type SidebarProps = {
   onCreateNote: () => void;
   onCreateSampleNotes: () => void;
   onDeleteNote: (id: string) => void;
+  onDeleteNotes: (ids: string[]) => void;
   onResetNotes: () => void;
   onSelectNote: (id: string) => void;
   onToggleTheme: () => void;
@@ -29,6 +30,7 @@ export function Sidebar({
   onCreateNote,
   onCreateSampleNotes,
   onDeleteNote,
+  onDeleteNotes,
   onResetNotes,
   onSelectNote,
   onToggleTheme,
@@ -38,7 +40,10 @@ export function Sidebar({
   const [draftUserName, setDraftUserName] = useState(DEFAULT_USER_NAME);
   const [isEditingUserName, setIsEditingUserName] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isNoteListOpen, setIsNoteListOpen] = useState(true);
   const [isTagFilterOpen, setIsTagFilterOpen] = useState(true);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedNoteIds, setSelectedNoteIds] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const normalizedSearchText = searchText.trim().toLowerCase();
@@ -46,6 +51,7 @@ export function Sidebar({
   const sortedNotes = [...notes].sort((firstNote, secondNote) =>
     secondNote.updatedAt.localeCompare(firstNote.updatedAt),
   );
+  const canCollapseNoteList = notes.length >= 10;
   // flatMap gathers every tag from every note into one array.
   // Set removes duplicates, so the sidebar shows each tag only once.
   const allTags = useMemo(
@@ -75,6 +81,22 @@ export function Sidebar({
     }
   }, [allTags, selectedTags]);
 
+  useEffect(() => {
+    const existingSelectedNoteIds = selectedNoteIds.filter((noteId) =>
+      notes.some((note) => note.id === noteId),
+    );
+
+    if (existingSelectedNoteIds.length !== selectedNoteIds.length) {
+      setSelectedNoteIds(existingSelectedNoteIds);
+    }
+  }, [notes, selectedNoteIds]);
+
+  useEffect(() => {
+    if (!canCollapseNoteList && !isNoteListOpen) {
+      setIsNoteListOpen(true);
+    }
+  }, [canCollapseNoteList, isNoteListOpen]);
+
   // filter creates a new array and does not change the original notes data.
   // This checks the title, content, and tags for the search text.
   const filteredNotes = sortedNotes.filter((note) => {
@@ -94,6 +116,11 @@ export function Sidebar({
 
     return matchesSelectedTags && matchesSearchText;
   });
+  const visibleNotes =
+    canCollapseNoteList && !isNoteListOpen
+      ? filteredNotes.slice(0, 10)
+      : filteredNotes;
+  const hiddenNoteCount = filteredNotes.length - visibleNotes.length;
 
   function startEditingUserName() {
     setDraftUserName(userName);
@@ -134,6 +161,35 @@ export function Sidebar({
         ? currentTags.filter((currentTag) => currentTag !== tag)
         : [...currentTags, tag],
     );
+  }
+
+  function startSelectionMode() {
+    setIsSelectionMode(true);
+    setSelectedNoteIds([]);
+    setIsNoteListOpen(true);
+  }
+
+  function cancelSelectionMode() {
+    setIsSelectionMode(false);
+    setSelectedNoteIds([]);
+  }
+
+  function toggleSelectedNote(noteId: string) {
+    setSelectedNoteIds((currentIds) =>
+      currentIds.includes(noteId)
+        ? currentIds.filter((currentId) => currentId !== noteId)
+        : [...currentIds, noteId],
+    );
+  }
+
+  function handleDeleteSelectedNotes() {
+    if (selectedNoteIds.length === 0 || selectedNoteIds.length >= notes.length) {
+      return;
+    }
+
+    onDeleteNotes(selectedNoteIds);
+    setIsSelectionMode(false);
+    setSelectedNoteIds([]);
   }
 
   return (
@@ -180,6 +236,103 @@ export function Sidebar({
               {"\u306e\u30e1\u30e2\u5e33"}
             </button>
           )}
+        </div>
+
+        {isSelectionMode ? (
+          <div className="mb-2 grid grid-cols-[1fr_auto] gap-2">
+            <button
+              type="button"
+              onClick={handleDeleteSelectedNotes}
+              disabled={
+                selectedNoteIds.length === 0 ||
+                selectedNoteIds.length >= notes.length
+              }
+              className={`rounded-md border px-3 py-2 text-left text-sm transition disabled:cursor-default disabled:opacity-40 ${
+                isDark
+                  ? "border-[#5a2f2f] bg-[#3a2525] text-[#f0c9c9] hover:bg-[#4a2c2c] disabled:hover:bg-[#3a2525]"
+                  : "border-[#e2c1b8] bg-[#fff2ef] text-[#9a3f2f] hover:bg-[#ffe8e1] disabled:hover:bg-[#fff2ef]"
+              }`}
+            >
+              {selectedNoteIds.length}
+              {"\u4ef6\u524a\u9664"}
+            </button>
+            <button
+              type="button"
+              onClick={cancelSelectionMode}
+              className={`rounded-md border px-3 py-2 text-sm transition ${
+                isDark
+                  ? "border-[#333333] bg-[#242424] text-[#bdbdbd] hover:bg-[#2d2d2d]"
+                  : "border-[#ded9d1] bg-[#f7f7f5] text-[#6f6a62] hover:bg-[#eee9e1]"
+              }`}
+            >
+              {"\u89e3\u9664"}
+            </button>
+          </div>
+        ) : (
+          <div className="mb-2 grid grid-cols-[1fr_auto] gap-2">
+            <button
+              onClick={onCreateNote}
+              className={`rounded-md border px-3 py-2 text-left text-sm transition ${
+                isDark
+                  ? "border-[#333333] bg-[#242424] text-[#d6d6d6] hover:bg-[#2b2b2b]"
+                  : "border-[#ded9d1] bg-[#f7f7f5] text-[#4f4b45] hover:bg-[#eee9e1]"
+              }`}
+            >
+              {"+ \u65b0\u898f\u30e1\u30e2"}
+            </button>
+            <button
+              type="button"
+              onClick={startSelectionMode}
+              disabled={filteredNotes.length === 0 || notes.length <= 1}
+              className={`flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm transition disabled:cursor-default disabled:opacity-40 ${
+                isDark
+                  ? "border-[#333333] bg-[#242424] text-[#bdbdbd] hover:bg-[#2d2d2d] disabled:hover:bg-[#242424]"
+                  : "border-[#ded9d1] bg-[#f7f7f5] text-[#6f6a62] hover:bg-[#eee9e1] disabled:hover:bg-[#f7f7f5]"
+              }`}
+            >
+              <svg
+                aria-hidden="true"
+                className="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="1.9"
+              >
+                <rect x="4" y="4" width="16" height="16" rx="3" />
+                <path d="m8 12 3 3 5-6" />
+              </svg>
+              {"\u9078\u629e"}
+            </button>
+          </div>
+        )}
+
+        <div className="mb-1.5 flex items-center gap-2 px-1">
+          <div
+            className={`flex min-w-0 flex-1 items-center gap-1 px-1 py-1 text-left text-xs font-medium ${
+              isDark ? "text-[#9b9b9b]" : "text-[#78746d]"
+            }`}
+          >
+            <svg
+              aria-hidden="true"
+              className="h-3.5 w-3.5 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="1.9"
+            >
+              <path d="M8 6h12M8 12h12M8 18h12" />
+              <path d="M4 6h.01M4 12h.01M4 18h.01" />
+            </svg>
+            <span>{"\u30e1\u30e2\u4e00\u89a7"}</span>
+            <span
+              className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] ${
+                isDark ? "bg-[#333333] text-[#d6d6d6]" : "bg-white text-[#5f5a52]"
+              }`}
+            >
+              {filteredNotes.length}
+              {"\u4ef6"}
+            </span>
+          </div>
         </div>
 
         <div className="relative mb-2">
@@ -288,26 +441,18 @@ export function Sidebar({
           </div>
         )}
 
-        <button
-          onClick={onCreateNote}
-          className={`mb-2 w-full rounded-md px-3 py-2 text-left text-sm transition ${
-            isDark
-              ? "text-[#d6d6d6] hover:bg-[#2b2b2b]"
-              : "text-[#4f4b45] hover:bg-[#e7e3dd]"
-          }`}
-        >
-          {"+ \u65b0\u898f\u30e1\u30e2"}
-        </button>
-
-        {filteredNotes.length > 0 ? (
-          <NoteList
-            isDark={isDark}
-            notes={filteredNotes}
-            selectedNoteId={selectedNoteId}
-            canDelete={notes.length > 1}
-            onDeleteNote={onDeleteNote}
-            onSelectNote={onSelectNote}
-          />
+        {visibleNotes.length > 0 ? (
+            <NoteList
+              isDark={isDark}
+              notes={visibleNotes}
+              selectedNoteId={selectedNoteId}
+              selectedNoteIds={selectedNoteIds}
+              canDelete={notes.length > 1}
+              isSelectionMode={isSelectionMode}
+              onDeleteNote={onDeleteNote}
+              onSelectNote={onSelectNote}
+              onToggleSelectNote={toggleSelectedNote}
+            />
         ) : (
           <p
             className={`px-3 py-2 text-xs ${
@@ -316,6 +461,40 @@ export function Sidebar({
           >
             {"\u4e00\u81f4\u3059\u308b\u30e1\u30e2\u304c\u3042\u308a\u307e\u305b\u3093"}
           </p>
+        )}
+
+        {canCollapseNoteList && filteredNotes.length > 10 && (
+          <button
+            type="button"
+            onClick={() => setIsNoteListOpen((isOpen) => !isOpen)}
+            className={`mt-1 flex w-full items-center justify-center gap-1 rounded-md px-3 py-2 text-xs transition ${
+              isDark
+                ? "text-[#bdbdbd] hover:bg-[#2d2d2d]"
+                : "text-[#6f6a62] hover:bg-[#eee9e1]"
+            }`}
+            aria-expanded={isNoteListOpen}
+          >
+            <svg
+              aria-hidden="true"
+              className={`h-3.5 w-3.5 transition-transform ${
+                isNoteListOpen ? "rotate-90" : "-rotate-90"
+              }`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+            {isNoteListOpen ? (
+              <span>{"\u5c11\u306a\u304f\u8868\u793a"}</span>
+            ) : (
+              <span>
+                {hiddenNoteCount}
+                {"\u4ef6\u3055\u3089\u306b\u8868\u793a"}
+              </span>
+            )}
+          </button>
         )}
       </div>
 

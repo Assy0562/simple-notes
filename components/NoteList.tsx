@@ -9,18 +9,24 @@ type NoteListProps = {
   isDark: boolean;
   notes: Note[];
   selectedNoteId: string;
+  selectedNoteIds: string[];
   canDelete: boolean;
+  isSelectionMode: boolean;
   onDeleteNote: (id: string) => void;
   onSelectNote: (id: string) => void;
+  onToggleSelectNote: (id: string) => void;
 };
 
 export function NoteList({
   isDark,
   notes,
   selectedNoteId,
+  selectedNoteIds,
   canDelete,
+  isSelectionMode,
   onDeleteNote,
   onSelectNote,
+  onToggleSelectNote,
 }: NoteListProps) {
   const [openTagNoteId, setOpenTagNoteId] = useState<string | null>(null);
 
@@ -29,6 +35,7 @@ export function NoteList({
       {notes.map((note) => {
         const isSelected = note.id === selectedNoteId;
         const isTagsOpen = openTagNoteId === note.id;
+        const isChecked = selectedNoteIds.includes(note.id);
 
         return (
           <div
@@ -43,6 +50,35 @@ export function NoteList({
                   : "hover:bg-[#e7e3dd]"
             }`}
           >
+            {isSelectionMode && (
+              <button
+                type="button"
+                onClick={() => onToggleSelectNote(note.id)}
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition ${
+                  isChecked
+                    ? isDark
+                      ? "border-[#666666] bg-[#3a3a3a] text-[#f1f1f1]"
+                      : "border-[#b9b2a7] bg-white text-[#37352f]"
+                    : isDark
+                      ? "border-[#444444] text-transparent hover:border-[#666666]"
+                      : "border-[#d6d0c8] text-transparent hover:border-[#b9b2a7]"
+                }`}
+                aria-pressed={isChecked}
+                aria-label={"\u30e1\u30e2\u3092\u9078\u629e"}
+              >
+                <svg
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                >
+                  <path d="m5 12 4 4 10-10" />
+                </svg>
+              </button>
+            )}
+
             <div className="min-w-0 flex-1">
               <button
                 onClick={() => onSelectNote(note.id)}
@@ -80,7 +116,7 @@ export function NoteList({
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
-              {note.tags.length > 0 && (
+              {note.tags.length > 0 && !isSelectionMode && (
                 <button
                   type="button"
                   onClick={() =>
@@ -121,22 +157,24 @@ export function NoteList({
                 </button>
               )}
 
-              <button
-                onClick={() => onDeleteNote(note.id)}
-                disabled={!canDelete}
-                className={`h-6 w-6 rounded text-sm opacity-0 transition disabled:cursor-not-allowed disabled:opacity-30 group-hover:opacity-100 ${
-                  isDark
-                    ? "text-[#9b9b9b] hover:bg-[#3a3a3a] hover:text-[#f1f1f1]"
-                    : "text-[#8a857d] hover:bg-[#ddd8d0] hover:text-[#37352f]"
-                }`}
-                title={
-                  canDelete
-                    ? "\u30e1\u30e2\u3092\u524a\u9664"
-                    : "\u30e1\u30e2\u306f\u6700\u4f4e1\u4ef6\u5fc5\u8981\u3067\u3059"
-                }
-              >
-                {"\u00d7"}
-              </button>
+              {!isSelectionMode && (
+                <button
+                  onClick={() => onDeleteNote(note.id)}
+                  disabled={!canDelete}
+                  className={`h-6 w-6 rounded text-sm opacity-0 transition disabled:cursor-not-allowed disabled:opacity-30 group-hover:opacity-100 ${
+                    isDark
+                      ? "text-[#9b9b9b] hover:bg-[#3a3a3a] hover:text-[#f1f1f1]"
+                      : "text-[#8a857d] hover:bg-[#ddd8d0] hover:text-[#37352f]"
+                  }`}
+                  title={
+                    canDelete
+                      ? "\u30e1\u30e2\u3092\u524a\u9664"
+                      : "\u30e1\u30e2\u306f\u6700\u4f4e1\u4ef6\u5fc5\u8981\u3067\u3059"
+                  }
+                >
+                  {"\u00d7"}
+                </button>
+              )}
             </div>
           </div>
         );
