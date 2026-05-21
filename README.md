@@ -1,6 +1,6 @@
 # シンプルメモ
 
-Next.js App Router、TypeScript、Tailwind CSSで作った学習用のNotion風メモアプリです。
+Next.js App Router、TypeScript、Tailwind CSSで作ったシンプルなメモ帳アプリです。
 
 ## 起動方法
 
@@ -11,20 +11,15 @@ npm run dev
 
 ブラウザで `http://localhost:3000` を開きます。
 
-## 実装済み
+## 主な機能
 
-- メモの一覧表示
-- タイトルと本文の検索
-- 更新日が新しい順の一覧表示
-- メモの選択
-- タイトルと本文の編集
-- 新規メモ作成
-- メモ削除
-- 削除前の確認
-- localStorage保存
-- 初期メモへのリセット
-- 保存状態の表示
-- ライト/ダークモード切り替え
+- メモの作成、編集、削除
+- メモ一覧の検索
+- タグの追加、再利用、絞り込み
+- 複数メモの選択削除
+- メモ一覧の表示件数切り替え
+- localStorageによる自動保存
+- ライトモード / ダークモード切り替え
 
 ## 主な構成
 
@@ -50,11 +45,6 @@ types/
   note.ts
 ```
 
-## 学習ポイント
+## メモ
 
-- `useState` と `useEffect` の基本
-- localStorageを使った保存
-- コンポーネント分割
-- カスタムフックによる状態管理の整理
-- TypeScriptの型定義
-- Tailwind CSSでのUI調整
+保存先はブラウザの localStorage です。別の端末や別のブラウザとは同期されません。

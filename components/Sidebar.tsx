@@ -6,7 +6,7 @@ import { NoteList } from "@/components/NoteList";
 import type { Note } from "@/types/note";
 
 const USER_NAME_KEY = "simple-notion-user-name";
-const DEFAULT_USER_NAME = "Assy0562";
+const DEFAULT_USER_NAME = "Unknown";
 
 type SidebarProps = {
   isDark: boolean;
