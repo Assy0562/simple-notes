@@ -21,6 +21,7 @@ export default function Home() {
     deleteNotes,
     resetNotes,
     selectNote,
+    togglePinnedNote,
     updateSelectedNote,
     updateSelectedNoteTags,
   } = useNotes();
@@ -81,6 +82,7 @@ export default function Home() {
           onResetNotes={resetNotes}
           onSelectNote={selectNote}
           onToggleTheme={toggleTheme}
+          onTogglePinnedNote={togglePinnedNote}
         />
 
         <NoteEditor

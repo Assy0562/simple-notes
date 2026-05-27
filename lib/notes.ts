@@ -13,6 +13,7 @@ export const initialNotes: Note[] = [
     tags: ["\u4f7f\u3044\u65b9", "\u57fa\u672c"],
     createdAt: "2026/05/21",
     updatedAt: "2026/05/21",
+    isPinned: true,
   },
   {
     id: "initial-2",
@@ -24,6 +25,7 @@ export const initialNotes: Note[] = [
     tags: ["\u4f7f\u3044\u65b9", "\u30bf\u30b0", "\u691c\u7d22"],
     createdAt: "2026/05/21",
     updatedAt: "2026/05/21",
+    isPinned: false,
   },
   {
     id: "initial-3",
@@ -35,6 +37,7 @@ export const initialNotes: Note[] = [
     tags: ["\u4f7f\u3044\u65b9", "\u4fdd\u5b58"],
     createdAt: "2026/05/21",
     updatedAt: "2026/05/21",
+    isPinned: false,
   },
 ];
 
@@ -88,6 +91,7 @@ function normalizeNote(value: unknown): Note | null {
     createdAt:
       typeof value.createdAt === "string" ? value.createdAt : value.updatedAt,
     updatedAt: value.updatedAt,
+    isPinned: value.isPinned === true,
   };
 }
 

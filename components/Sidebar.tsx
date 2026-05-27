@@ -20,7 +20,10 @@ type SidebarProps = {
   onResetNotes: () => void;
   onSelectNote: (id: string) => void;
   onToggleTheme: () => void;
+  onTogglePinnedNote: (id: string) => void;
 };
+
+type SortMode = "updated-desc" | "created-desc" | "title-asc";
 
 export function Sidebar({
   isDark,
@@ -34,6 +37,7 @@ export function Sidebar({
   onResetNotes,
   onSelectNote,
   onToggleTheme,
+  onTogglePinnedNote,
 }: SidebarProps) {
   const [searchText, setSearchText] = useState("");
   const [userName, setUserName] = useState(DEFAULT_USER_NAME);
@@ -41,16 +45,18 @@ export function Sidebar({
   const [isEditingUserName, setIsEditingUserName] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isNoteListOpen, setIsNoteListOpen] = useState(true);
-  const [isTagFilterOpen, setIsTagFilterOpen] = useState(true);
+  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+  const [isTagFilterOpen, setIsTagFilterOpen] = useState(false);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedNoteIds, setSelectedNoteIds] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagFilterText, setTagFilterText] = useState("");
+  const [sortMode, setSortMode] = useState<SortMode>("updated-desc");
 
   const normalizedSearchText = searchText.trim().toLowerCase();
+  const normalizedTagFilterText = tagFilterText.trim().toLowerCase();
   const displayUserName = userName.trim() || "\u3042\u306a\u305f";
-  const sortedNotes = [...notes].sort((firstNote, secondNote) =>
-    secondNote.updatedAt.localeCompare(firstNote.updatedAt),
-  );
+  const sortedNotes = [...notes].sort(compareNotes);
   const canCollapseNoteList = notes.length >= 10;
   // flatMap gathers every tag from every note into one array.
   // Set removes duplicates, so the sidebar shows each tag only once.
@@ -61,6 +67,14 @@ export function Sidebar({
       ),
     [notes],
   );
+  const selectedFilterTags = selectedTags.filter((tag) => allTags.includes(tag));
+  const availableFilterTags = allTags
+    .filter((tag) => !selectedFilterTags.includes(tag))
+    .filter(
+      (tag) =>
+        normalizedTagFilterText === "" ||
+        tag.toLowerCase().includes(normalizedTagFilterText),
+    );
 
   useEffect(() => {
     const savedUserName = localStorage.getItem(USER_NAME_KEY);
@@ -190,6 +204,37 @@ export function Sidebar({
     onDeleteNotes(selectedNoteIds);
     setIsSelectionMode(false);
     setSelectedNoteIds([]);
+  }
+
+  function getSortLabel() {
+    if (sortMode === "created-desc") {
+      return "\u4f5c\u6210\u304c\u65b0\u3057\u3044\u9806";
+    }
+
+    if (sortMode === "title-asc") {
+      return "\u30bf\u30a4\u30c8\u30eb\u9806";
+    }
+
+    return "\u66f4\u65b0\u304c\u65b0\u3057\u3044\u9806";
+  }
+
+  function compareNotes(firstNote: Note, secondNote: Note) {
+    if (firstNote.isPinned !== secondNote.isPinned) {
+      return firstNote.isPinned ? -1 : 1;
+    }
+
+    if (sortMode === "created-desc") {
+      return secondNote.createdAt.localeCompare(firstNote.createdAt);
+    }
+
+    if (sortMode === "title-asc") {
+      const firstTitle = firstNote.title || "\u7121\u984c\u306e\u30e1\u30e2";
+      const secondTitle = secondNote.title || "\u7121\u984c\u306e\u30e1\u30e2";
+
+      return firstTitle.localeCompare(secondTitle, "ja");
+    }
+
+    return secondNote.updatedAt.localeCompare(firstNote.updatedAt);
   }
 
   return (
@@ -361,85 +406,253 @@ export function Sidebar({
           />
         </div>
 
-        {allTags.length > 0 && (
-          <div className="mb-3 px-1">
-            <div className="mb-1.5 flex items-center gap-2">
-              <button
-                onClick={() => setIsTagFilterOpen((isOpen) => !isOpen)}
-                className={`flex min-w-0 flex-1 items-center gap-1 rounded px-1 py-1 text-left text-xs font-medium transition ${
+        <div className="relative mb-3 flex items-center gap-1 px-1">
+          <button
+            type="button"
+            onClick={() => {
+              setIsTagFilterOpen((isOpen) => !isOpen);
+              setIsSortMenuOpen(false);
+            }}
+            disabled={allTags.length === 0}
+            className={`relative flex h-8 w-8 items-center justify-center rounded-md transition ${
+              isTagFilterOpen || selectedTags.length > 0
+                ? isDark
+                  ? "bg-[#303030] text-[#f1f1f1]"
+                  : "bg-white text-[#37352f] shadow-sm"
+                : isDark
+                  ? "text-[#9b9b9b] hover:bg-[#2b2b2b] hover:text-[#d6d6d6] disabled:opacity-40"
+                  : "text-[#78746d] hover:bg-[#e7e3dd] hover:text-[#4f4b45] disabled:opacity-40"
+            }`}
+            title={"\u30d5\u30a3\u30eb\u30bf\u30fc"}
+            aria-label={"\u30d5\u30a3\u30eb\u30bf\u30fc"}
+            aria-expanded={isTagFilterOpen}
+            aria-pressed={selectedTags.length > 0}
+          >
+            <svg
+              aria-hidden="true"
+              className="block h-4 w-4 shrink-0 overflow-hidden"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M3 4.5A1.5 1.5 0 0 1 4.5 3h7.17a2.5 2.5 0 0 1 1.77.73l7.33 7.33a2.5 2.5 0 0 1 0 3.54l-6.17 6.17a2.5 2.5 0 0 1-3.54 0L3.73 13.44A2.5 2.5 0 0 1 3 11.67V4.5Zm6 5.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
+              />
+            </svg>
+            {selectedTags.length > 0 && (
+              <span
+                className={`absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] ${
                   isDark
-                    ? "text-[#9b9b9b] hover:bg-[#2b2b2b]"
-                    : "text-[#78746d] hover:bg-[#e7e3dd]"
+                    ? "bg-[#f0c36a] text-[#272016]"
+                    : "bg-[#7a5a18] text-white"
                 }`}
-                aria-expanded={isTagFilterOpen}
               >
-                <svg
-                  aria-hidden="true"
-                  className={`h-3.5 w-3.5 shrink-0 transition-transform ${
-                    isTagFilterOpen ? "-rotate-90" : "rotate-180"
-                  }`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="m15 18-6-6 6-6" />
-                </svg>
-                <span>{"\u30bf\u30b0"}</span>
-                {selectedTags.length > 0 && (
-                  <span
-                    className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] ${
-                      isDark
-                        ? "bg-[#333333] text-[#d6d6d6]"
-                        : "bg-white text-[#5f5a52]"
-                    }`}
-                  >
-                    {selectedTags.length}
-                    {"\u4ef6"}
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedTags([])}
-                disabled={selectedTags.length === 0}
-                className={`shrink-0 rounded px-1.5 py-1 text-xs transition disabled:cursor-default disabled:opacity-40 ${
-                  isDark
-                    ? "text-[#bdbdbd] hover:bg-[#2d2d2d] disabled:hover:bg-transparent"
-                    : "text-[#6f6a62] hover:bg-[#eee9e1] disabled:hover:bg-transparent"
-                }`}
-                aria-label={"\u30bf\u30b0\u9078\u629e\u3092\u30af\u30ea\u30a2"}
-              >
-                {"\u00d7 \u30af\u30ea\u30a2"}
-              </button>
-            </div>
-
-            {isTagFilterOpen && (
-              <div className="flex flex-wrap gap-1.5">
-                {allTags.map((tag) => (
-                  <button
-                    key={tag}
-                    onClick={() => toggleSelectedTag(tag)}
-                    className={`max-w-full truncate rounded-full border px-2 py-1 text-xs transition ${
-                      selectedTags.includes(tag)
-                        ? isDark
-                          ? "border-[#555555] bg-[#333333] text-[#f1f1f1]"
-                          : "border-[#cfc7bc] bg-white text-[#37352f] shadow-sm"
-                        : isDark
-                          ? "border-[#333333] bg-[#242424] text-[#bdbdbd] hover:bg-[#2d2d2d]"
-                          : "border-[#e1ddd5] bg-[#f7f4ee] text-[#6f6a62] hover:bg-[#eee9e1]"
-                    }`}
-                    title={tag}
-                    aria-pressed={selectedTags.includes(tag)}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
+                {selectedTags.length}
+              </span>
             )}
-          </div>
-        )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsSortMenuOpen((isOpen) => !isOpen);
+              setIsTagFilterOpen(false);
+            }}
+            className={`flex h-8 w-8 items-center justify-center rounded-md transition ${
+              isSortMenuOpen
+                ? isDark
+                  ? "bg-[#303030] text-[#f1f1f1]"
+                  : "bg-white text-[#37352f] shadow-sm"
+                : isDark
+                  ? "text-[#9b9b9b] hover:bg-[#2b2b2b] hover:text-[#d6d6d6]"
+                  : "text-[#78746d] hover:bg-[#e7e3dd] hover:text-[#4f4b45]"
+            }`}
+            title={getSortLabel()}
+            aria-label={`${"\u4e26\u3073\u66ff\u3048"}: ${getSortLabel()}`}
+            aria-expanded={isSortMenuOpen}
+          >
+            <svg
+              aria-hidden="true"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="1.9"
+            >
+              <path d="M8 4v16" />
+              <path d="m5 7 3-3 3 3" />
+              <path d="M16 20V4" />
+              <path d="m13 17 3 3 3-3" />
+            </svg>
+          </button>
+
+          {isTagFilterOpen && (
+            <div
+              className={`absolute left-1 top-11 z-20 w-56 rounded-md border p-2 shadow-lg ${
+                isDark
+                  ? "border-[#333333] bg-[#252525]"
+                  : "border-[#e4e1dc] bg-[#fbfaf8]"
+              }`}
+            >
+              <input
+                value={tagFilterText}
+                onChange={(event) => setTagFilterText(event.target.value)}
+                className={`mb-2 w-full rounded-md border px-2 py-1.5 text-sm outline-none transition ${
+                  isDark
+                    ? "border-[#3a3a3a] bg-[#1b1b1b] text-[#e6e6e6] placeholder:text-[#777777] focus:border-[#555555]"
+                    : "border-[#ded9d1] bg-[#f7f7f5] text-[#37352f] placeholder:text-[#9b968e] focus:border-[#b9b2a7]"
+                }`}
+                placeholder={"\u30bf\u30b0\u3092\u691c\u7d22"}
+              />
+
+              {selectedFilterTags.length > 0 && (
+                <div
+                  className={`mb-2 border-b pb-2 ${
+                    isDark
+                      ? "border-[#333333]"
+                      : "border-[#e4e1dc]"
+                  }`}
+                >
+                  <div
+                    className={`mb-1 px-1 text-[11px] font-medium ${
+                      isDark ? "text-[#9b9b9b]" : "text-[#78746d]"
+                    }`}
+                  >
+                    {"\u9078\u629e\u4e2d"}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedFilterTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => toggleSelectedTag(tag)}
+                        className={`max-w-full truncate rounded-full border px-2 py-1 text-xs transition ${
+                          isDark
+                            ? "border-[#555555] bg-[#333333] text-[#f1f1f1] hover:bg-[#3a3a3a]"
+                            : "border-[#cfc7bc] bg-white text-[#37352f] shadow-sm hover:bg-[#f2eee8]"
+                        }`}
+                        title={tag}
+                      >
+                        {tag}
+                        {" \u00d7"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="max-h-48 overflow-y-auto pr-1">
+                {availableFilterTags.length > 0 ? (
+                  availableFilterTags.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => toggleSelectedTag(tag)}
+                      className={`flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm transition ${
+                        isDark
+                          ? "text-[#e6e6e6] hover:bg-[#303030]"
+                          : "text-[#4f4b45] hover:bg-[#eeeae4]"
+                      }`}
+                      title={tag}
+                    >
+                      <span className="min-w-0 truncate">{tag}</span>
+                    </button>
+                  ))
+                ) : (
+                  <p
+                    className={`px-3 py-2 text-xs ${
+                      isDark ? "text-[#9b9b9b]" : "text-[#78746d]"
+                    }`}
+                  >
+                    {"\u4e00\u81f4\u3059\u308b\u30bf\u30b0\u304c\u3042\u308a\u307e\u305b\u3093"}
+                  </p>
+                )}
+              </div>
+
+              {(selectedTags.length > 0 || tagFilterText !== "") && (
+                <div
+                  className={`mt-2 border-t pt-1 ${
+                    isDark ? "border-[#333333]" : "border-[#e4e1dc]"
+                  }`}
+                >
+                  {tagFilterText !== "" && (
+                    <button
+                      type="button"
+                      onClick={() => setTagFilterText("")}
+                      className={`flex w-full items-center rounded px-3 py-2 text-left text-sm transition ${
+                        isDark
+                          ? "text-[#bdbdbd] hover:bg-[#303030]"
+                          : "text-[#6f6a62] hover:bg-[#eeeae4]"
+                      }`}
+                    >
+                      {"\u691c\u7d22\u3092\u30af\u30ea\u30a2"}
+                    </button>
+                  )}
+
+                  {selectedTags.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTags([])}
+                      className={`flex w-full items-center rounded px-3 py-2 text-left text-sm transition ${
+                        isDark
+                          ? "text-[#bdbdbd] hover:bg-[#303030]"
+                          : "text-[#6f6a62] hover:bg-[#eeeae4]"
+                      }`}
+                    >
+                      {"\u30d5\u30a3\u30eb\u30bf\u30fc\u3092\u30af\u30ea\u30a2"}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {isSortMenuOpen && (
+            <div
+              className={`absolute left-10 top-11 z-20 w-52 rounded-md border p-1 shadow-lg ${
+                isDark
+                  ? "border-[#333333] bg-[#252525]"
+                  : "border-[#e4e1dc] bg-[#fbfaf8]"
+              }`}
+            >
+              {[
+                { value: "updated-desc", label: "\u66f4\u65b0\u304c\u65b0\u3057\u3044\u9806" },
+                { value: "created-desc", label: "\u4f5c\u6210\u304c\u65b0\u3057\u3044\u9806" },
+                { value: "title-asc", label: "\u30bf\u30a4\u30c8\u30eb\u9806" },
+              ].map((sortOption) => (
+                <button
+                  key={sortOption.value}
+                  type="button"
+                  onClick={() => {
+                    setSortMode(sortOption.value as SortMode);
+                    setIsSortMenuOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm transition ${
+                    isDark
+                      ? "text-[#e6e6e6] hover:bg-[#303030]"
+                      : "text-[#4f4b45] hover:bg-[#eeeae4]"
+                  }`}
+                  aria-pressed={sortMode === sortOption.value}
+                >
+                  <span className="min-w-0 truncate">{sortOption.label}</span>
+                  {sortMode === sortOption.value && (
+                    <svg
+                      aria-hidden="true"
+                      className="h-3.5 w-3.5 shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2.1"
+                    >
+                      <path d="m5 12 4 4 10-10" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {visibleNotes.length > 0 ? (
             <NoteList
@@ -451,6 +664,7 @@ export function Sidebar({
               isSelectionMode={isSelectionMode}
               onDeleteNote={onDeleteNote}
               onSelectNote={onSelectNote}
+              onTogglePinnedNote={onTogglePinnedNote}
               onToggleSelectNote={toggleSelectedNote}
             />
         ) : (

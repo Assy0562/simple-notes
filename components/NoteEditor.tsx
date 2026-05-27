@@ -219,19 +219,14 @@ function TagInput({
         >
           <svg
             aria-hidden="true"
-            className="h-4 w-4"
-            fill="none"
+            className="block h-4 w-4 shrink-0 overflow-hidden"
             viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="1.8"
+            fill="currentColor"
           >
-            <path d="M3 3h8.5L21 12.5 12.5 21 3 11.5V3Z" />
-            <circle
-              cx="8.5"
-              cy="8.5"
-              r="0.8"
-              fill="currentColor"
-              stroke="none"
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M3 4.5A1.5 1.5 0 0 1 4.5 3h7.17a2.5 2.5 0 0 1 1.77.73l7.33 7.33a2.5 2.5 0 0 1 0 3.54l-6.17 6.17a2.5 2.5 0 0 1-3.54 0L3.73 13.44A2.5 2.5 0 0 1 3 11.67V4.5Zm6 5.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
             />
           </svg>
         </button>

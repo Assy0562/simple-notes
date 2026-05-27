@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useState } from "react";
 
@@ -14,6 +14,7 @@ type NoteListProps = {
   isSelectionMode: boolean;
   onDeleteNote: (id: string) => void;
   onSelectNote: (id: string) => void;
+  onTogglePinnedNote: (id: string) => void;
   onToggleSelectNote: (id: string) => void;
 };
 
@@ -26,6 +27,7 @@ export function NoteList({
   isSelectionMode,
   onDeleteNote,
   onSelectNote,
+  onTogglePinnedNote,
   onToggleSelectNote,
 }: NoteListProps) {
   const [openTagNoteId, setOpenTagNoteId] = useState<string | null>(null);
@@ -66,21 +68,15 @@ export function NoteList({
                 aria-pressed={isChecked}
                 aria-label={"\u30e1\u30e2\u3092\u9078\u629e"}
               >
-                <svg
-                  aria-hidden="true"
-                  className="h-3.5 w-3.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                >
-                  <path d="m5 12 4 4 10-10" />
-                </svg>
+                <span aria-hidden="true" className="text-xs leading-none">
+                  {"✓"}
+                </span>
               </button>
             )}
 
             <div className="min-w-0 flex-1">
               <button
+                type="button"
                 onClick={() => onSelectNote(note.id)}
                 className="w-full min-w-0 text-left"
               >
@@ -116,6 +112,46 @@ export function NoteList({
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
+              {!isSelectionMode && (
+                <button
+                  type="button"
+                  onClick={() => onTogglePinnedNote(note.id)}
+                  className={`flex h-6 w-6 items-center justify-center rounded transition ${
+                    note.isPinned
+                      ? isDark
+                        ? "bg-[#3a3327] text-[#f0c36a]"
+                        : "bg-[#fff3cf] text-[#9a6a12]"
+                      : isDark
+                        ? "text-[#9b9b9b] opacity-0 hover:bg-[#3a3a3a] hover:text-[#f1f1f1] group-hover:opacity-100"
+                        : "text-[#8a857d] opacity-0 hover:bg-[#ddd8d0] hover:text-[#37352f] group-hover:opacity-100"
+                  } overflow-hidden`}
+                  title={
+                    note.isPinned
+                      ? "\u30d4\u30f3\u7559\u3081\u3092\u89e3\u9664"
+                      : "\u30d4\u30f3\u7559\u3081"
+                  }
+                  aria-label={
+                    note.isPinned
+                      ? "\u30d4\u30f3\u7559\u3081\u3092\u89e3\u9664"
+                      : "\u30d4\u30f3\u7559\u3081"
+                  }
+                  aria-pressed={note.isPinned}
+                >
+                  <svg
+                    aria-hidden="true"
+                    className="block h-3.5 w-3.5 shrink-0 overflow-hidden"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M9 3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5v3.2l3.6 3.6A1.4 1.4 0 0 1 17.6 12H14v4.2l-.9 5.1a1.1 1.1 0 0 1-2.2 0l-.9-5.1V12H6.4a1.4 1.4 0 0 1-1-2.4L9 6.7V3.5Z"
+                    />
+                  </svg>
+                </button>
+              )}
+
               {note.tags.length > 0 && !isSelectionMode && (
                 <button
                   type="button"
@@ -130,8 +166,8 @@ export function NoteList({
                         ? "bg-[#3a3a3a] text-[#f1f1f1]"
                         : "bg-[#ddd8d0] text-[#37352f]"
                       : isDark
-                        ? "text-[#9b9b9b] hover:bg-[#3a3a3a] hover:text-[#f1f1f1]"
-                        : "text-[#8a857d] hover:bg-[#ddd8d0] hover:text-[#37352f]"
+                        ? "text-[#9b9b9b] opacity-0 hover:bg-[#3a3a3a] hover:text-[#f1f1f1] group-hover:opacity-100"
+                        : "text-[#8a857d] opacity-0 hover:bg-[#ddd8d0] hover:text-[#37352f] group-hover:opacity-100"
                   }`}
                   title={"\u30bf\u30b0\u3092\u8868\u793a"}
                   aria-label={"\u30bf\u30b0\u3092\u8868\u793a"}
@@ -139,19 +175,14 @@ export function NoteList({
                 >
                   <svg
                     aria-hidden="true"
-                    className="h-3.5 w-3.5"
-                    fill="none"
+                    className="block h-3.5 w-3.5 shrink-0 overflow-hidden"
                     viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
+                    fill="currentColor"
                   >
-                    <path d="M3 3h8.5L21 12.5 12.5 21 3 11.5V3Z" />
-                    <circle
-                      cx="8.5"
-                      cy="8.5"
-                      r="0.8"
-                      fill="currentColor"
-                      stroke="none"
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M3 4.5A1.5 1.5 0 0 1 4.5 3h7.17a2.5 2.5 0 0 1 1.77.73l7.33 7.33a2.5 2.5 0 0 1 0 3.54l-6.17 6.17a2.5 2.5 0 0 1-3.54 0L3.73 13.44A2.5 2.5 0 0 1 3 11.67V4.5Zm6 5.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
                     />
                   </svg>
                 </button>
@@ -159,6 +190,7 @@ export function NoteList({
 
               {!isSelectionMode && (
                 <button
+                  type="button"
                   onClick={() => onDeleteNote(note.id)}
                   disabled={!canDelete}
                   className={`h-6 w-6 rounded text-sm opacity-0 transition disabled:cursor-not-allowed disabled:opacity-30 group-hover:opacity-100 ${
