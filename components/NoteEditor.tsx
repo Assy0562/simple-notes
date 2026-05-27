@@ -1,8 +1,70 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Extension } from "@tiptap/core";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import TaskItem from "@tiptap/extension-task-item";
+import TaskList from "@tiptap/extension-task-list";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
 import type { Note } from "@/types/note";
+
+const MarkdownShortcuts = Extension.create({
+  name: "markdownShortcuts",
+
+  addKeyboardShortcuts() {
+    return {
+      Space: () => {
+        const { editor } = this;
+        const { selection } = editor.state;
+
+        if (!selection.empty) {
+          return false;
+        }
+
+        const { $from } = selection;
+
+        if ($from.parent.type.name !== "paragraph") {
+          return false;
+        }
+
+        const lineText = $from.parent.textBetween(0, $from.parentOffset, "\n");
+        const markerStart = $from.start();
+        const markerEnd = $from.pos;
+        const chain = editor.chain().deleteRange({
+          from: markerStart,
+          to: markerEnd,
+        });
+
+        if (/^#{1,3}$/.test(lineText)) {
+          return chain
+            .setHeading({ level: lineText.length as 1 | 2 | 3 })
+            .run();
+        }
+
+        if (lineText === "-") {
+          return chain.toggleBulletList().run();
+        }
+
+        if (lineText === "1.") {
+          return chain.toggleOrderedList().run();
+        }
+
+        if (lineText === ">") {
+          return chain.toggleBlockquote().run();
+        }
+
+        if (lineText === "```") {
+          return chain.setCodeBlock().run();
+        }
+
+        return false;
+      },
+    };
+  },
+});
 
 type NoteEditorProps = {
   allTags: string[];
@@ -25,6 +87,34 @@ export function NoteEditor({
 }: NoteEditorProps) {
   const titleInputRef = useRef<HTMLInputElement>(null);
   const [tagDraft, setTagDraft] = useState("");
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      MarkdownShortcuts,
+      Link.configure({
+        autolink: true,
+        defaultProtocol: "https",
+        openOnClick: false,
+      }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+      Placeholder.configure({
+        placeholder: "\u30e1\u30e2\u3092\u66f8\u3044\u3066\u304f\u3060\u3055\u3044...",
+      }),
+    ],
+    content: toEditorHtml(note.content),
+    editorProps: {
+      attributes: {
+        class: "note-rich-editor",
+      },
+    },
+    immediatelyRender: false,
+    onUpdate({ editor: currentEditor }) {
+      onUpdateNote("content", currentEditor.getHTML());
+    },
+  });
 
   useEffect(() => {
     if (titleFocusRequest > 0) {
@@ -35,6 +125,18 @@ export function NoteEditor({
   useEffect(() => {
     setTagDraft("");
   }, [note.id]);
+
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    const nextContent = toEditorHtml(note.content);
+
+    if (editor.getHTML() !== nextContent) {
+      editor.commands.setContent(nextContent, { emitUpdate: false });
+    }
+  }, [editor, note.content, note.id]);
 
   const saveText =
     saveStatus === "saving"
@@ -83,16 +185,13 @@ export function NoteEditor({
           placeholder={"\u7121\u984c\u306e\u30e1\u30e2"}
         />
 
-        <textarea
-          value={note.content}
-          onChange={(event) => onUpdateNote("content", event.target.value)}
-          className={`min-h-[520px] w-full resize-none border-none bg-transparent text-base leading-8 outline-none ${
-            isDark
-              ? "text-[#dedede] placeholder:text-[#666666]"
-              : "text-[#37352f] placeholder:text-[#b9b4ac]"
+        <div
+          className={`min-h-[520px] text-base leading-8 ${
+            isDark ? "text-[#dedede]" : "text-[#37352f]"
           }`}
-          placeholder={"\u30e1\u30e2\u3092\u66f8\u3044\u3066\u304f\u3060\u3055\u3044..."}
-        />
+        >
+          <EditorContent editor={editor} />
+        </div>
 
         <div
           className={`mt-6 flex items-center justify-between gap-5 border-t pt-4 text-xs ${
@@ -160,6 +259,168 @@ export function NoteEditor({
     // filter creates a new array that excludes the clicked tag.
     onUpdateTags(note.tags.filter((tag) => tag !== tagToRemove));
   }
+}
+
+function toEditorHtml(content: string) {
+  if (content.trim() === "") {
+    return "";
+  }
+
+  if (/<\/?[a-z][\s\S]*>/i.test(content)) {
+    return content;
+  }
+
+  return markdownTextToEditorHtml(content);
+}
+
+function markdownTextToEditorHtml(content: string) {
+  const lines = content.split(/\r?\n/);
+  const html: string[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    const trimmedLine = line.trim();
+
+    if (trimmedLine === "") {
+      index += 1;
+      continue;
+    }
+
+    const codeFenceMatch = trimmedLine.match(/^```/);
+
+    if (codeFenceMatch) {
+      const codeLines: string[] = [];
+      index += 1;
+
+      while (index < lines.length && !lines[index].trim().startsWith("```")) {
+        codeLines.push(lines[index]);
+        index += 1;
+      }
+
+      if (index < lines.length) {
+        index += 1;
+      }
+
+      html.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+      continue;
+    }
+
+    const headingMatch = trimmedLine.match(/^(#{1,3})\s+(.+)$/);
+
+    if (headingMatch) {
+      html.push(
+        `<h${headingMatch[1].length}>${formatInlineMarkdown(headingMatch[2])}</h${headingMatch[1].length}>`,
+      );
+      index += 1;
+      continue;
+    }
+
+    if (/^>\s+/.test(trimmedLine)) {
+      const quoteLines: string[] = [];
+
+      while (index < lines.length && /^>\s+/.test(lines[index].trim())) {
+        quoteLines.push(lines[index].trim().replace(/^>\s+/, ""));
+        index += 1;
+      }
+
+      html.push(
+        `<blockquote><p>${formatInlineMarkdown(quoteLines.join(" ").trim())}</p></blockquote>`,
+      );
+      continue;
+    }
+
+    if (/^-\s+\[[ xX]\]\s+/.test(trimmedLine)) {
+      const items: string[] = [];
+
+      while (
+        index < lines.length &&
+        /^-\s+\[[ xX]\]\s+/.test(lines[index].trim())
+      ) {
+        const itemMatch = lines[index]
+          .trim()
+          .match(/^-\s+\[([ xX])\]\s+(.+)$/);
+        const isChecked = itemMatch?.[1].toLowerCase() === "x";
+        const text = itemMatch?.[2] ?? "";
+
+        items.push(
+          `<li data-type="taskItem" data-checked="${isChecked ? "true" : "false"}"><label><input type="checkbox"${
+            isChecked ? ' checked="checked"' : ""
+          }></label><div><p>${formatInlineMarkdown(text)}</p></div></li>`,
+        );
+        index += 1;
+      }
+
+      html.push(`<ul data-type="taskList">${items.join("")}</ul>`);
+      continue;
+    }
+
+    if (/^-\s+/.test(trimmedLine)) {
+      const items: string[] = [];
+
+      while (index < lines.length && /^-\s+/.test(lines[index].trim())) {
+        items.push(
+          `<li><p>${formatInlineMarkdown(lines[index].trim().replace(/^-\s+/, ""))}</p></li>`,
+        );
+        index += 1;
+      }
+
+      html.push(`<ul>${items.join("")}</ul>`);
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(trimmedLine)) {
+      const items: string[] = [];
+
+      while (index < lines.length && /^\d+\.\s+/.test(lines[index].trim())) {
+        items.push(
+          `<li><p>${formatInlineMarkdown(lines[index].trim().replace(/^\d+\.\s+/, ""))}</p></li>`,
+        );
+        index += 1;
+      }
+
+      html.push(`<ol>${items.join("")}</ol>`);
+      continue;
+    }
+
+    const paragraphLines = [line];
+    index += 1;
+
+    while (
+      index < lines.length &&
+      lines[index].trim() !== "" &&
+      !/^(#{1,3})\s+/.test(lines[index].trim()) &&
+      !/^>\s+/.test(lines[index].trim()) &&
+      !/^-\s+/.test(lines[index].trim()) &&
+      !/^\d+\.\s+/.test(lines[index].trim()) &&
+      !lines[index].trim().startsWith("```")
+    ) {
+      paragraphLines.push(lines[index]);
+      index += 1;
+    }
+
+    html.push(
+      `<p>${formatInlineMarkdown(paragraphLines.join("\n")).replace(/\n/g, "<br>")}</p>`,
+    );
+  }
+
+  return html.join("");
+}
+
+function formatInlineMarkdown(value: string) {
+  return escapeHtml(value)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2">$1</a>');
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 type TagInputProps = {

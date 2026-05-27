@@ -13,6 +13,7 @@ type SidebarProps = {
   notes: Note[];
   selectedNoteId: string;
   onCreateLongTestNote: () => void;
+  onCreateMarkdownTestNote: () => void;
   onCreateNote: () => void;
   onCreateSampleNotes: () => void;
   onDeleteNote: (id: string) => void;
@@ -30,6 +31,7 @@ export function Sidebar({
   notes,
   selectedNoteId,
   onCreateLongTestNote,
+  onCreateMarkdownTestNote,
   onCreateNote,
   onCreateSampleNotes,
   onDeleteNote,
@@ -161,6 +163,11 @@ export function Sidebar({
 
   function handleCreateLongTestNote() {
     onCreateLongTestNote();
+    setIsSettingsOpen(false);
+  }
+
+  function handleCreateMarkdownTestNote() {
+    onCreateMarkdownTestNote();
     setIsSettingsOpen(false);
   }
 
@@ -758,6 +765,17 @@ export function Sidebar({
               }`}
             >
               {"\u9577\u6587\u30c6\u30b9\u30c8\u30e1\u30e2\u3092\u8ffd\u52a0"}
+            </button>
+
+            <button
+              onClick={handleCreateMarkdownTestNote}
+              className={`w-full rounded px-3 py-2 text-left text-sm transition ${
+                isDark
+                  ? "text-[#e6e6e6] hover:bg-[#303030]"
+                  : "text-[#4f4b45] hover:bg-[#eeeae4]"
+              }`}
+            >
+              {"Markdown\u30c6\u30b9\u30c8\u30e1\u30e2\u3092\u8ffd\u52a0"}
             </button>
 
             <button

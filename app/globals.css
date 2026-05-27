@@ -9,3 +9,155 @@ body {
   background: #f7f7f5;
   color: #2f2f2f;
 }
+
+.note-rich-editor {
+  min-height: 520px;
+  outline: none;
+  overflow-wrap: anywhere;
+}
+
+.note-rich-editor:focus,
+.note-rich-editor .ProseMirror,
+.note-rich-editor .ProseMirror:focus,
+.note-rich-editor .ProseMirror:focus-visible {
+  outline: none;
+}
+
+.note-rich-editor p.is-editor-empty:first-child::before {
+  color: rgb(127 127 127 / 0.62);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.note-rich-editor > *:first-child {
+  margin-top: 0;
+}
+
+.note-rich-editor > *:last-child {
+  margin-bottom: 0;
+}
+
+.note-rich-editor h1,
+.note-rich-editor h2,
+.note-rich-editor h3 {
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.25;
+  margin: 1.35em 0 0.35em;
+}
+
+.note-rich-editor h1 {
+  font-size: 1.9rem;
+}
+
+.note-rich-editor h2 {
+  font-size: 1.45rem;
+}
+
+.note-rich-editor h3 {
+  font-size: 1.15rem;
+}
+
+.note-rich-editor p,
+.note-rich-editor ul,
+.note-rich-editor ol,
+.note-rich-editor blockquote,
+.note-rich-editor pre {
+  margin: 0.45em 0;
+}
+
+.note-rich-editor ul,
+.note-rich-editor ol {
+  padding-left: 1.35rem;
+}
+
+.note-rich-editor ul {
+  list-style: disc;
+}
+
+.note-rich-editor ol {
+  list-style: decimal;
+}
+
+.note-rich-editor li {
+  margin: 0.15em 0;
+  padding-left: 0.15rem;
+}
+
+.note-rich-editor li > p {
+  margin: 0.1em 0;
+}
+
+.note-rich-editor ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0.2rem;
+}
+
+.note-rich-editor li[data-type="taskItem"] {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.5rem;
+  padding-left: 0;
+}
+
+.note-rich-editor li[data-type="taskItem"] > label {
+  flex: 0 0 auto;
+  margin-top: 0.45rem;
+}
+
+.note-rich-editor li[data-type="taskItem"] > div {
+  flex: 1 1 auto;
+}
+
+.note-rich-editor li[data-type="taskItem"] input {
+  accent-color: #6f6a62;
+  height: 0.95rem;
+  width: 0.95rem;
+}
+
+.note-rich-editor blockquote {
+  border-left: 3px solid rgb(127 127 127 / 0.32);
+  color: rgb(127 127 127);
+  margin: 0.65em 0;
+  padding: 0.05rem 0 0.05rem 0.9rem;
+}
+
+.note-rich-editor code {
+  background: rgb(127 127 127 / 0.13);
+  border-radius: 4px;
+  font-size: 0.86em;
+  padding: 0.16rem 0.32rem;
+}
+
+.note-rich-editor pre {
+  background: rgb(127 127 127 / 0.12);
+  border-radius: 4px;
+  line-height: 1.6;
+  margin: 0.75em 0;
+  overflow-x: auto;
+  padding: 0.9rem 1rem;
+}
+
+.note-rich-editor pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.note-rich-editor a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgb(127 127 127 / 0.65);
+  text-underline-offset: 2px;
+}
+
+.note-rich-editor hr {
+  border: 0;
+  border-top: 1px solid rgb(127 127 127 / 0.22);
+  margin: 1.4rem 0;
+}
+
+.note-rich-editor strong {
+  font-weight: 650;
+}

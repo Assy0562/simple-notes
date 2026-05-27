@@ -15,6 +15,7 @@ export default function Home() {
     selectedNoteId,
     titleFocusRequest,
     createLongTestNote,
+    createMarkdownTestNote,
     createNote,
     createSampleNotes,
     deleteNote,
@@ -75,6 +76,7 @@ export default function Home() {
           notes={notes}
           selectedNoteId={selectedNoteId}
           onCreateLongTestNote={createLongTestNote}
+          onCreateMarkdownTestNote={createMarkdownTestNote}
           onCreateNote={createNote}
           onCreateSampleNotes={createSampleNotes}
           onDeleteNote={requestDeleteNote}

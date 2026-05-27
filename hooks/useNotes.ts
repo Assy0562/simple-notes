@@ -30,6 +30,14 @@ const longTestNoteContent =
   "This kind of test note is helpful because it gives the interface a realistic amount of content. " +
   "If anything feels crowded, hard to scan, or visually unbalanced, that is a useful signal for the next small improvement.";
 
+const markdownTestNoteContent =
+  "<h1>Markdown \u30b7\u30e7\u30fc\u30c8\u30ab\u30c3\u30c8\u30c6\u30b9\u30c8</h1>" +
+  "<p>\u3053\u306e\u30e1\u30e2\u306f\u3001\u5165\u529b\u4e2d\u306b\u30d6\u30ed\u30c3\u30af\u304c\u5909\u63db\u3055\u308c\u308b\u304b\u3092\u78ba\u8a8d\u3059\u308b\u305f\u3081\u306e\u30c6\u30b9\u30c8\u7528\u3067\u3059\u3002</p>" +
+  "<h2>\u8a66\u305b\u308b\u5165\u529b</h2>" +
+  "<ul><li><p><code># </code>\u3067\u5927\u898b\u51fa\u3057</p></li><li><p><code>## </code>\u3067\u4e2d\u898b\u51fa\u3057</p></li><li><p><code>- </code>\u3067\u7b87\u6761\u66f8\u304d</p></li><li><p><code>1. </code>\u3067\u756a\u53f7\u4ed8\u304d\u30ea\u30b9\u30c8</p></li><li><p><code>&gt; </code>\u3067\u5f15\u7528</p></li><li><p><code>```</code>\u3067\u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af</p></li></ul>" +
+  "<blockquote><p>Notion\u306e\u3088\u3046\u306b\u3001\u66f8\u3044\u3066\u3044\u308b\u5834\u6240\u3067\u305d\u306e\u307e\u307e\u30d6\u30ed\u30c3\u30af\u3068\u3057\u3066\u8868\u793a\u3055\u308c\u307e\u3059\u3002</p></blockquote>" +
+  "<pre><code>const message = \"Hello, editor shortcuts!\";\nconsole.log(message);</code></pre>";
+
 const sampleNotes = [
   {
     title: "\u30d0\u30ca\u30ca\u306f\u8349",
@@ -170,6 +178,22 @@ export function useNotes() {
     setSelectedNoteId(newNote.id);
   }
 
+  function createMarkdownTestNote() {
+    const today = getTodayText();
+    const newNote: Note = {
+      id: createNoteId(),
+      title: "Markdown \u30b7\u30e7\u30fc\u30c8\u30ab\u30c3\u30c8\u30c6\u30b9\u30c8",
+      content: markdownTestNoteContent,
+      tags: ["Markdown", "\u30c6\u30b9\u30c8"],
+      createdAt: today,
+      updatedAt: today,
+      isPinned: false,
+    };
+
+    setNotes((currentNotes) => [newNote, ...currentNotes]);
+    setSelectedNoteId(newNote.id);
+  }
+
   function createSampleNotes() {
     const today = getTodayText();
     const newNotes = sampleNotes.map((sampleNote) => ({
@@ -277,6 +301,7 @@ export function useNotes() {
     selectedNoteId,
     titleFocusRequest,
     createLongTestNote,
+    createMarkdownTestNote,
     createNote,
     createSampleNotes,
     deleteNote,

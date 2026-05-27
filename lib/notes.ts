@@ -50,7 +50,20 @@ export function getTodayText() {
 }
 
 export function getNotePreview(content: string) {
-  return content.trim() || "\u307e\u3060\u672c\u6587\u304c\u3042\u308a\u307e\u305b\u3093";
+  const plainText = content
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return plainText || "\u307e\u3060\u672c\u6587\u304c\u3042\u308a\u307e\u305b\u3093";
 }
 
 export function createNoteId() {
