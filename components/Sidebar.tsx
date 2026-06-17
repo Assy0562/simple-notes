@@ -22,6 +22,7 @@ type SidebarProps = {
   onSelectNote: (id: string) => void;
   onToggleTheme: () => void;
   onTogglePinnedNote: (id: string) => void;
+  onToggleArchivedNote: (id: string) => void;
 };
 
 type SortMode = "updated-desc" | "created-desc" | "title-asc";
@@ -40,6 +41,7 @@ export function Sidebar({
   onSelectNote,
   onToggleTheme,
   onTogglePinnedNote,
+  onToggleArchivedNote,
 }: SidebarProps) {
   const [searchText, setSearchText] = useState("");
   const [userName, setUserName] = useState(DEFAULT_USER_NAME);
@@ -54,12 +56,16 @@ export function Sidebar({
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagFilterText, setTagFilterText] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("updated-desc");
+  const [isArchiveView, setIsArchiveView] = useState(false);
 
   const normalizedSearchText = searchText.trim().toLowerCase();
   const normalizedTagFilterText = tagFilterText.trim().toLowerCase();
   const displayUserName = userName.trim() || "\u3042\u306a\u305f";
-  const sortedNotes = [...notes].sort(compareNotes);
-  const canCollapseNoteList = notes.length >= 10;
+  const archivedNoteCount = notes.filter((note) => note.isArchived).length;
+  const activeNoteCount = notes.length - archivedNoteCount;
+  const listSourceNotes = notes.filter((note) => note.isArchived === isArchiveView);
+  const sortedNotes = [...listSourceNotes].sort(compareNotes);
+  const canCollapseNoteList = sortedNotes.length >= 10;
   // flatMap gathers every tag from every note into one array.
   // Set removes duplicates, so the sidebar shows each tag only once.
   const allTags = useMemo(
@@ -137,6 +143,7 @@ export function Sidebar({
       ? filteredNotes.slice(0, 10)
       : filteredNotes;
   const hiddenNoteCount = filteredNotes.length - visibleNotes.length;
+  const hasActiveFilters = searchText.trim() !== "" || selectedTags.length > 0;
 
   function startEditingUserName() {
     setDraftUserName(userName);
@@ -176,6 +183,12 @@ export function Sidebar({
     setIsSettingsOpen(false);
   }
 
+  function clearFilters() {
+    setSearchText("");
+    setSelectedTags([]);
+    setTagFilterText("");
+  }
+
   function toggleSelectedTag(tag: string) {
     setSelectedTags((currentTags) =>
       currentTags.includes(tag)
@@ -193,6 +206,13 @@ export function Sidebar({
   function cancelSelectionMode() {
     setIsSelectionMode(false);
     setSelectedNoteIds([]);
+  }
+
+  function changeArchiveView(nextArchiveView: boolean) {
+    setIsArchiveView(nextArchiveView);
+    setIsSelectionMode(false);
+    setSelectedNoteIds([]);
+    setIsNoteListOpen(true);
   }
 
   function toggleSelectedNote(noteId: string) {
@@ -358,6 +378,48 @@ export function Sidebar({
           </div>
         )}
 
+        <div
+          className={`mb-2 grid grid-cols-2 rounded-md border p-1 text-xs ${
+            isDark
+              ? "border-[#303030] bg-[#1b1b1b]"
+              : "border-[#ded9d1] bg-[#f7f7f5]"
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => changeArchiveView(false)}
+            className={`rounded px-2 py-1.5 transition ${
+              !isArchiveView
+                ? isDark
+                  ? "bg-[#303030] text-[#f1f1f1]"
+                  : "bg-white text-[#37352f] shadow-sm"
+                : isDark
+                  ? "text-[#9b9b9b] hover:text-[#d6d6d6]"
+                  : "text-[#78746d] hover:text-[#4f4b45]"
+            }`}
+            aria-pressed={!isArchiveView}
+          >
+            {"\u30e1\u30e2"}
+            <span className="ml-1 opacity-70">{activeNoteCount}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => changeArchiveView(true)}
+            className={`rounded px-2 py-1.5 transition ${
+              isArchiveView
+                ? isDark
+                  ? "bg-[#303030] text-[#f1f1f1]"
+                  : "bg-white text-[#37352f] shadow-sm"
+                : isDark
+                  ? "text-[#9b9b9b] hover:text-[#d6d6d6]"
+                  : "text-[#78746d] hover:text-[#4f4b45]"
+            }`}
+            aria-pressed={isArchiveView}
+          >
+            {"\u30a2\u30fc\u30ab\u30a4\u30d6"}
+            <span className="ml-1 opacity-70">{archivedNoteCount}</span>
+          </button>
+        </div>
         <div className="mb-1.5 flex items-center gap-2 px-1">
           <div
             className={`flex min-w-0 flex-1 items-center gap-1 px-1 py-1 text-left text-xs font-medium ${
@@ -375,7 +437,7 @@ export function Sidebar({
               <path d="M8 6h12M8 12h12M8 18h12" />
               <path d="M4 6h.01M4 12h.01M4 18h.01" />
             </svg>
-            <span>{"\u30e1\u30e2\u4e00\u89a7"}</span>
+            <span>{isArchiveView ? "\u30a2\u30fc\u30ab\u30a4\u30d6" : "\u30e1\u30e2\u4e00\u89a7"}</span>
             <span
               className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] ${
                 isDark ? "bg-[#333333] text-[#d6d6d6]" : "bg-white text-[#5f5a52]"
@@ -404,13 +466,28 @@ export function Sidebar({
           <input
             value={searchText}
             onChange={(event) => setSearchText(event.target.value)}
-            className={`w-full rounded-md border py-2 pl-9 pr-3 text-sm outline-none transition ${
+            className={`w-full rounded-md border py-2 pl-9 pr-9 text-sm outline-none transition ${
               isDark
                 ? "border-[#303030] bg-[#1b1b1b] text-[#e6e6e6] placeholder:text-[#777777] focus:border-[#555555]"
                 : "border-[#ded9d1] bg-[#f7f7f5] text-[#37352f] placeholder:text-[#9b968e] focus:border-[#b9b2a7]"
             }`}
             placeholder={"\u30e1\u30e2\u3092\u691c\u7d22"}
           />
+          {searchText !== "" && (
+            <button
+              type="button"
+              onClick={() => setSearchText("")}
+              className={`absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded transition ${
+                isDark
+                  ? "text-[#9b9b9b] hover:bg-[#303030] hover:text-[#e6e6e6]"
+                  : "text-[#8a857d] hover:bg-[#eee9e1] hover:text-[#37352f]"
+              }`}
+              aria-label={"\u691c\u7d22\u3092\u30af\u30ea\u30a2"}
+              title={"\u691c\u7d22\u3092\u30af\u30ea\u30a2"}
+            >
+              {"\u00d7"}
+            </button>
+          )}
         </div>
 
         <div className="relative mb-3 flex items-center gap-1 px-1">
@@ -672,16 +749,36 @@ export function Sidebar({
               onDeleteNote={onDeleteNote}
               onSelectNote={onSelectNote}
               onTogglePinnedNote={onTogglePinnedNote}
+              onToggleArchivedNote={onToggleArchivedNote}
               onToggleSelectNote={toggleSelectedNote}
             />
         ) : (
-          <p
-            className={`px-3 py-2 text-xs ${
-              isDark ? "text-[#9b9b9b]" : "text-[#78746d]"
+          <div
+            className={`rounded-md border px-3 py-4 text-xs ${
+              isDark
+                ? "border-[#303030] bg-[#1b1b1b] text-[#9b9b9b]"
+                : "border-[#e4e1dc] bg-[#f7f7f5] text-[#78746d]"
             }`}
           >
-            {"\u4e00\u81f4\u3059\u308b\u30e1\u30e2\u304c\u3042\u308a\u307e\u305b\u3093"}
-          </p>
+            <p className="leading-5">
+              {hasActiveFilters
+                ? "\u691c\u7d22\u3084\u30bf\u30b0\u306b\u4e00\u81f4\u3059\u308b\u30e1\u30e2\u304c\u3042\u308a\u307e\u305b\u3093"
+                : isArchiveView ? "\u30a2\u30fc\u30ab\u30a4\u30d6\u3055\u308c\u305f\u30e1\u30e2\u306f\u307e\u3060\u3042\u308a\u307e\u305b\u3093" : "\u8868\u793a\u3067\u304d\u308b\u30e1\u30e2\u304c\u3042\u308a\u307e\u305b\u3093"}
+            </p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className={`mt-3 rounded-md border px-2 py-1.5 transition ${
+                  isDark
+                    ? "border-[#3a3a3a] text-[#d6d6d6] hover:bg-[#303030]"
+                    : "border-[#ded9d1] text-[#5f5a52] hover:bg-[#eee9e1]"
+                }`}
+              >
+                {"\u6761\u4ef6\u3092\u30af\u30ea\u30a2"}
+              </button>
+            )}
+          </div>
         )}
 
         {canCollapseNoteList && filteredNotes.length > 10 && (

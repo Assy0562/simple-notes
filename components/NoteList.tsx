@@ -15,6 +15,7 @@ type NoteListProps = {
   onDeleteNote: (id: string) => void;
   onSelectNote: (id: string) => void;
   onTogglePinnedNote: (id: string) => void;
+  onToggleArchivedNote: (id: string) => void;
   onToggleSelectNote: (id: string) => void;
 };
 
@@ -28,6 +29,7 @@ export function NoteList({
   onDeleteNote,
   onSelectNote,
   onTogglePinnedNote,
+  onToggleArchivedNote,
   onToggleSelectNote,
 }: NoteListProps) {
   const [openTagNoteId, setOpenTagNoteId] = useState<string | null>(null);
@@ -69,7 +71,7 @@ export function NoteList({
                 aria-label={"\u30e1\u30e2\u3092\u9078\u629e"}
               >
                 <span aria-hidden="true" className="text-xs leading-none">
-                  {"✓"}
+                  {"\u2713"}
                 </span>
               </button>
             )}
@@ -152,6 +154,41 @@ export function NoteList({
                 </button>
               )}
 
+              {!isSelectionMode && (
+                <button
+                  type="button"
+                  onClick={() => onToggleArchivedNote(note.id)}
+                  className={`flex h-6 w-6 items-center justify-center rounded transition ${
+                    isDark
+                      ? "text-[#9b9b9b] opacity-0 hover:bg-[#3a3a3a] hover:text-[#f1f1f1] group-hover:opacity-100"
+                      : "text-[#8a857d] opacity-0 hover:bg-[#ddd8d0] hover:text-[#37352f] group-hover:opacity-100"
+                  }`}
+                  title={
+                    note.isArchived
+                      ? "\u30a2\u30fc\u30ab\u30a4\u30d6\u304b\u3089\u623b\u3059"
+                      : "\u30a2\u30fc\u30ab\u30a4\u30d6"
+                  }
+                  aria-label={
+                    note.isArchived
+                      ? "\u30a2\u30fc\u30ab\u30a4\u30d6\u304b\u3089\u623b\u3059"
+                      : "\u30a2\u30fc\u30ab\u30a4\u30d6"
+                  }
+                >
+                  <svg
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  >
+                    <path d="M4 8h16" />
+                    <path d="M6 8v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8" />
+                    <path d="M8 4h8l2 4H6l2-4Z" />
+                    {note.isArchived ? <path d="m9 15 3-3 3 3" /> : <path d="m9 13 3 3 3-3" />}
+                  </svg>
+                </button>
+              )}
               {note.tags.length > 0 && !isSelectionMode && (
                 <button
                   type="button"

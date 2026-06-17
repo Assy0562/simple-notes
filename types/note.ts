@@ -6,4 +6,5 @@ export type Note = {
   createdAt: string;
   updatedAt: string;
   isPinned: boolean;
+  isArchived: boolean;
 };

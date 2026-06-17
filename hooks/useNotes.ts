@@ -155,6 +155,7 @@ export function useNotes() {
       createdAt: today,
       updatedAt: today,
       isPinned: false,
+      isArchived: false,
     };
 
     setNotes((currentNotes) => [newNote, ...currentNotes]);
@@ -172,6 +173,7 @@ export function useNotes() {
       createdAt: today,
       updatedAt: today,
       isPinned: false,
+      isArchived: false,
     };
 
     setNotes((currentNotes) => [newNote, ...currentNotes]);
@@ -188,6 +190,7 @@ export function useNotes() {
       createdAt: today,
       updatedAt: today,
       isPinned: false,
+      isArchived: false,
     };
 
     setNotes((currentNotes) => [newNote, ...currentNotes]);
@@ -204,6 +207,7 @@ export function useNotes() {
       createdAt: today,
       updatedAt: today,
       isPinned: false,
+      isArchived: false,
     }));
 
     setNotes((currentNotes) => [...newNotes, ...currentNotes]);
@@ -265,6 +269,23 @@ export function useNotes() {
     );
   }
 
+  function toggleArchivedNote(noteId: string) {
+    setNotes((currentNotes) =>
+      currentNotes.map((note) => {
+        if (note.id !== noteId) {
+          return note;
+        }
+
+        return {
+          ...note,
+          isArchived: !note.isArchived,
+          isPinned: note.isArchived ? note.isPinned : false,
+          updatedAt: getTodayText(),
+        };
+      }),
+    );
+  }
+
   function deleteNotes(noteIds: string[]) {
     const idsToDelete = new Set(noteIds);
     const nextNotes = notes.filter((note) => !idsToDelete.has(note.id));
@@ -309,6 +330,7 @@ export function useNotes() {
     resetNotes,
     selectNote: setSelectedNoteId,
     togglePinnedNote,
+    toggleArchivedNote,
     updateSelectedNote,
     updateSelectedNoteTags,
   };
