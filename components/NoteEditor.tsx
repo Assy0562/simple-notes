@@ -74,6 +74,7 @@ type NoteEditorProps = {
   titleFocusRequest: number;
   onUpdateNote: (field: "title" | "content", value: string) => void;
   onUpdateTags: (tags: string[]) => void;
+  onBackToList?: () => void;
 };
 
 export function NoteEditor({
@@ -84,6 +85,7 @@ export function NoteEditor({
   titleFocusRequest,
   onUpdateNote,
   onUpdateTags,
+  onBackToList,
 }: NoteEditorProps) {
   const titleInputRef = useRef<HTMLInputElement>(null);
   const [tagDraft, setTagDraft] = useState("");
@@ -154,8 +156,22 @@ export function NoteEditor({
           : "bg-[#b9b4ac]";
 
   return (
-    <section className="flex-1 px-8 py-10">
+    <section className="flex-1 px-4 py-5 md:px-8 md:py-10">
       <article className="mx-auto max-w-3xl">
+        {onBackToList && (
+          <button
+            type="button"
+            onClick={onBackToList}
+            className={`mb-5 inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition md:hidden ${
+              isDark
+                ? "border-[#333333] bg-[#242424] text-[#d6d6d6] hover:bg-[#2d2d2d]"
+                : "border-[#ded9d1] bg-[#f7f7f5] text-[#4f4b45] hover:bg-[#eee9e1]"
+            }`}
+          >
+            <span aria-hidden="true">{"\u2190"}</span>
+            <span>{"\u4e00\u89a7\u3078\u623b\u308b"}</span>
+          </button>
+        )}
         <div
           className={`mb-6 border-b pb-4 text-xs ${
             isDark
@@ -179,14 +195,14 @@ export function NoteEditor({
           ref={titleInputRef}
           value={note.title}
           onChange={(event) => onUpdateNote("title", event.target.value)}
-          className={`mb-6 w-full bg-transparent text-4xl font-bold tracking-normal outline-none ${
+          className={`mb-5 w-full bg-transparent text-3xl font-bold tracking-normal outline-none md:mb-6 md:text-4xl ${
             isDark ? "placeholder:text-[#666666]" : "placeholder:text-[#b9b4ac]"
           }`}
           placeholder={"\u7121\u984c\u306e\u30e1\u30e2"}
         />
 
         <div
-          className={`min-h-[520px] text-base leading-8 ${
+          className={`min-h-[420px] text-base leading-8 md:min-h-[520px] ${
             isDark ? "text-[#dedede]" : "text-[#37352f]"
           }`}
         >
@@ -194,13 +210,13 @@ export function NoteEditor({
         </div>
 
         <div
-          className={`mt-6 flex items-center justify-between gap-5 border-t pt-4 text-xs ${
+          className={`mt-6 flex flex-col items-start gap-3 border-t pt-4 text-xs sm:flex-row sm:items-center sm:justify-between sm:gap-5 ${
             isDark
               ? "border-[#2f2f2f] text-[#9b9b9b]"
               : "border-[#e4e1dc] text-[#8a857d]"
           }`}
         >
-          <dl className="flex items-center gap-5">
+          <dl className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <div className="flex items-center gap-1.5">
               <dt>{"\u4f5c\u6210"}</dt>
               <dd className={isDark ? "text-[#c9c9c9]" : "text-[#5f5a52]"}>

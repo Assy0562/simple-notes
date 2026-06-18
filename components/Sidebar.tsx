@@ -63,7 +63,9 @@ export function Sidebar({
   const displayUserName = userName.trim() || "\u3042\u306a\u305f";
   const archivedNoteCount = notes.filter((note) => note.isArchived).length;
   const activeNoteCount = notes.length - archivedNoteCount;
-  const listSourceNotes = notes.filter((note) => note.isArchived === isArchiveView);
+  const listSourceNotes = notes.filter(
+    (note) => note.isArchived === isArchiveView,
+  );
   const sortedNotes = [...listSourceNotes].sort(compareNotes);
   const canCollapseNoteList = sortedNotes.length >= 10;
   // flatMap gathers every tag from every note into one array.
@@ -266,7 +268,7 @@ export function Sidebar({
 
   return (
     <aside
-      className={`flex w-72 flex-col border-r px-3 py-4 transition-colors ${
+      className={`flex min-h-screen w-full flex-col border-r px-3 py-4 transition-colors md:w-72 ${
         isDark
           ? "border-[#2f2f2f] bg-[#202020]"
           : "border-[#e4e1dc] bg-[#f1efeb]"

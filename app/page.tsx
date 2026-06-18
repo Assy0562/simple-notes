@@ -30,6 +30,7 @@ export default function Home() {
   } = useNotes();
   const { isDark, toggleTheme } = useTheme();
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
+  const [isMobileEditorOpen, setIsMobileEditorOpen] = useState(false);
 
   const deleteTargetNotes = useMemo(
     () => notes.filter((note) => deleteTargetIds.includes(note.id)),
@@ -51,6 +52,31 @@ export default function Home() {
 
   function requestDeleteNote(noteId: string) {
     setDeleteTargetIds([noteId]);
+  }
+
+  function handleCreateNote() {
+    createNote();
+    setIsMobileEditorOpen(true);
+  }
+
+  function handleCreateLongTestNote() {
+    createLongTestNote();
+    setIsMobileEditorOpen(true);
+  }
+
+  function handleCreateMarkdownTestNote() {
+    createMarkdownTestNote();
+    setIsMobileEditorOpen(true);
+  }
+
+  function handleCreateSampleNotes() {
+    createSampleNotes();
+    setIsMobileEditorOpen(true);
+  }
+
+  function handleSelectNote(noteId: string) {
+    selectNote(noteId);
+    setIsMobileEditorOpen(true);
   }
 
   function requestDeleteNotes(noteIds: string[]) {
@@ -77,33 +103,44 @@ export default function Home() {
         isDark ? "bg-[#191919] text-[#ededed]" : "bg-[#f7f7f5] text-[#2f2f2f]"
       }`}
     >
-      <div className="flex min-h-screen">
-        <Sidebar
-          isDark={isDark}
-          notes={notes}
-          selectedNoteId={selectedNoteId}
-          onCreateLongTestNote={createLongTestNote}
-          onCreateMarkdownTestNote={createMarkdownTestNote}
-          onCreateNote={createNote}
-          onCreateSampleNotes={createSampleNotes}
-          onDeleteNote={requestDeleteNote}
-          onDeleteNotes={requestDeleteNotes}
-          onResetNotes={resetNotes}
-          onSelectNote={selectNote}
-          onToggleTheme={toggleTheme}
-          onTogglePinnedNote={togglePinnedNote}
-          onToggleArchivedNote={toggleArchivedNote}
-        />
+      <div className="min-h-screen md:flex">
+        <div className={isMobileEditorOpen ? "hidden md:block" : "block"}>
+          <Sidebar
+            isDark={isDark}
+            notes={notes}
+            selectedNoteId={selectedNoteId}
+            onCreateLongTestNote={handleCreateLongTestNote}
+            onCreateMarkdownTestNote={handleCreateMarkdownTestNote}
+            onCreateNote={handleCreateNote}
+            onCreateSampleNotes={handleCreateSampleNotes}
+            onDeleteNote={requestDeleteNote}
+            onDeleteNotes={requestDeleteNotes}
+            onResetNotes={resetNotes}
+            onSelectNote={handleSelectNote}
+            onToggleTheme={toggleTheme}
+            onTogglePinnedNote={togglePinnedNote}
+            onToggleArchivedNote={toggleArchivedNote}
+          />
+        </div>
 
-        <NoteEditor
-          allTags={recentTags}
-          isDark={isDark}
-          note={selectedNote}
-          saveStatus={saveStatus}
-          titleFocusRequest={titleFocusRequest}
-          onUpdateNote={updateSelectedNote}
-          onUpdateTags={updateSelectedNoteTags}
-        />
+        <div
+          className={
+            isMobileEditorOpen
+              ? "block min-h-screen flex-1"
+              : "hidden min-h-screen flex-1 md:block"
+          }
+        >
+          <NoteEditor
+            allTags={recentTags}
+            isDark={isDark}
+            note={selectedNote}
+            saveStatus={saveStatus}
+            titleFocusRequest={titleFocusRequest}
+            onUpdateNote={updateSelectedNote}
+            onUpdateTags={updateSelectedNoteTags}
+            onBackToList={() => setIsMobileEditorOpen(false)}
+          />
+        </div>
       </div>
 
       <DeleteConfirmModal
