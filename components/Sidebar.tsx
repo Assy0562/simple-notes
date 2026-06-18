@@ -48,6 +48,7 @@ export function Sidebar({
   const [draftUserName, setDraftUserName] = useState(DEFAULT_USER_NAME);
   const [isEditingUserName, setIsEditingUserName] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isDeveloperMenuOpen, setIsDeveloperMenuOpen] = useState(false);
   const [isNoteListOpen, setIsNoteListOpen] = useState(true);
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [isTagFilterOpen, setIsTagFilterOpen] = useState(false);
@@ -165,24 +166,40 @@ export function Sidebar({
     setIsEditingUserName(false);
   }
 
+  function handleStartEditingUserName() {
+    startEditingUserName();
+    setIsSettingsOpen(false);
+    setIsDeveloperMenuOpen(false);
+  }
+
+  function handleToggleTheme() {
+    onToggleTheme();
+    setIsSettingsOpen(false);
+    setIsDeveloperMenuOpen(false);
+  }
+
   function handleResetNotes() {
     onResetNotes();
     setIsSettingsOpen(false);
+    setIsDeveloperMenuOpen(false);
   }
 
   function handleCreateLongTestNote() {
     onCreateLongTestNote();
     setIsSettingsOpen(false);
+    setIsDeveloperMenuOpen(false);
   }
 
   function handleCreateMarkdownTestNote() {
     onCreateMarkdownTestNote();
     setIsSettingsOpen(false);
+    setIsDeveloperMenuOpen(false);
   }
 
   function handleCreateSampleNotes() {
     onCreateSampleNotes();
     setIsSettingsOpen(false);
+    setIsDeveloperMenuOpen(false);
   }
 
   function clearFilters() {
@@ -819,12 +836,20 @@ export function Sidebar({
       </div>
 
       <div
-        className={`relative mt-4 flex justify-between border-t px-2 pt-3 ${
+        className={`relative mt-4 flex justify-start border-t px-2 pt-3 ${
           isDark ? "border-[#303030]" : "border-[#e4e1dc]"
         }`}
       >
         <button
-          onClick={() => setIsSettingsOpen((isOpen) => !isOpen)}
+          onClick={() => {
+            setIsSettingsOpen((isOpen) => {
+              if (isOpen) {
+                setIsDeveloperMenuOpen(false);
+              }
+
+              return !isOpen;
+            });
+          }}
           className={`flex h-8 w-8 items-center justify-center rounded-full border transition ${
             isDark
               ? "border-[#3a3a3a] bg-[#262626] text-[#e6e6e6] hover:bg-[#303030]"
@@ -855,87 +880,117 @@ export function Sidebar({
                 : "border-[#e4e1dc] bg-[#fbfaf8]"
             }`}
           >
-            <button
-              onClick={handleCreateLongTestNote}
-              className={`w-full rounded px-3 py-2 text-left text-sm transition ${
-                isDark
-                  ? "text-[#e6e6e6] hover:bg-[#303030]"
-                  : "text-[#4f4b45] hover:bg-[#eeeae4]"
-              }`}
-            >
-              {"\u9577\u6587\u30c6\u30b9\u30c8\u30e1\u30e2\u3092\u8ffd\u52a0"}
-            </button>
+            {isDeveloperMenuOpen ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIsDeveloperMenuOpen(false)}
+                  className={`mb-1 flex w-full items-center gap-2 rounded px-3 py-2 text-left text-xs transition ${
+                    isDark
+                      ? "text-[#bdbdbd] hover:bg-[#303030]"
+                      : "text-[#6f6a62] hover:bg-[#eeeae4]"
+                  }`}
+                >
+                  <span aria-hidden="true">{"\u2039"}</span>
+                  {"\u8a2d\u5b9a\u306b\u623b\u308b"}
+                </button>
 
-            <button
-              onClick={handleCreateMarkdownTestNote}
-              className={`w-full rounded px-3 py-2 text-left text-sm transition ${
-                isDark
-                  ? "text-[#e6e6e6] hover:bg-[#303030]"
-                  : "text-[#4f4b45] hover:bg-[#eeeae4]"
-              }`}
-            >
-              {"Markdown\u30c6\u30b9\u30c8\u30e1\u30e2\u3092\u8ffd\u52a0"}
-            </button>
+                <div
+                  className={`mb-1 border-t ${
+                    isDark ? "border-[#333333]" : "border-[#e4e1dc]"
+                  }`}
+                />
 
-            <button
-              onClick={handleCreateSampleNotes}
-              className={`w-full rounded px-3 py-2 text-left text-sm transition ${
-                isDark
-                  ? "text-[#e6e6e6] hover:bg-[#303030]"
-                  : "text-[#4f4b45] hover:bg-[#eeeae4]"
-              }`}
-            >
-              {"\u30b5\u30f3\u30d7\u30eb\u30e1\u30e210\u4ef6\u3092\u8ffd\u52a0"}
-            </button>
+                <button
+                  onClick={handleCreateLongTestNote}
+                  className={`w-full rounded px-3 py-2 text-left text-sm transition ${
+                    isDark
+                      ? "text-[#e6e6e6] hover:bg-[#303030]"
+                      : "text-[#4f4b45] hover:bg-[#eeeae4]"
+                  }`}
+                >
+                  {"\u9577\u6587\u30c6\u30b9\u30c8\u30e1\u30e2\u3092\u8ffd\u52a0"}
+                </button>
 
-            <button
-              onClick={handleResetNotes}
-              className={`w-full rounded px-3 py-2 text-left text-sm transition ${
-                isDark
-                  ? "text-[#e6e6e6] hover:bg-[#303030]"
-                  : "text-[#4f4b45] hover:bg-[#eeeae4]"
-              }`}
-            >
-              {"\u521d\u671f\u30e1\u30e2\u306b\u623b\u3059"}
-            </button>
+                <button
+                  onClick={handleCreateMarkdownTestNote}
+                  className={`w-full rounded px-3 py-2 text-left text-sm transition ${
+                    isDark
+                      ? "text-[#e6e6e6] hover:bg-[#303030]"
+                      : "text-[#4f4b45] hover:bg-[#eeeae4]"
+                  }`}
+                >
+                  {"Markdown\u30c6\u30b9\u30c8\u30e1\u30e2\u3092\u8ffd\u52a0"}
+                </button>
+
+                <button
+                  onClick={handleCreateSampleNotes}
+                  className={`w-full rounded px-3 py-2 text-left text-sm transition ${
+                    isDark
+                      ? "text-[#e6e6e6] hover:bg-[#303030]"
+                      : "text-[#4f4b45] hover:bg-[#eeeae4]"
+                  }`}
+                >
+                  {"\u30b5\u30f3\u30d7\u30eb\u30e1\u30e210\u4ef6\u3092\u8ffd\u52a0"}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handleStartEditingUserName}
+                  className={`w-full rounded px-3 py-2 text-left text-sm transition ${
+                    isDark
+                      ? "text-[#e6e6e6] hover:bg-[#303030]"
+                      : "text-[#4f4b45] hover:bg-[#eeeae4]"
+                  }`}
+                >
+                  {"\u30e6\u30fc\u30b6\u30fc\u540d\u3092\u5909\u66f4"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleToggleTheme}
+                  className={`flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm transition ${
+                    isDark
+                      ? "text-[#e6e6e6] hover:bg-[#303030]"
+                      : "text-[#4f4b45] hover:bg-[#eeeae4]"
+                  }`}
+                >
+                  <span>{"\u30c6\u30fc\u30de\u5207\u308a\u66ff\u3048"}</span>
+                  <span className="text-xs opacity-70">
+                    {isDark ? "\u30e9\u30a4\u30c8" : "\u30c0\u30fc\u30af"}
+                  </span>
+                </button>
+
+                <button
+                  onClick={handleResetNotes}
+                  className={`w-full rounded px-3 py-2 text-left text-sm transition ${
+                    isDark
+                      ? "text-[#e6e6e6] hover:bg-[#303030]"
+                      : "text-[#4f4b45] hover:bg-[#eeeae4]"
+                  }`}
+                >
+                  {"\u521d\u671f\u30e1\u30e2\u306b\u623b\u3059"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsDeveloperMenuOpen(true)}
+                  className={`flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm transition ${
+                    isDark
+                      ? "text-[#e6e6e6] hover:bg-[#303030]"
+                      : "text-[#4f4b45] hover:bg-[#eeeae4]"
+                  }`}
+                >
+                  <span>{"\u958b\u767a\u8005\u30b3\u30de\u30f3\u30c9"}</span>
+                  <span aria-hidden="true">{"\u203a"}</span>
+                </button>
+              </>
+            )}
           </div>
         )}
 
-        <button
-          onClick={onToggleTheme}
-          className={`flex h-8 w-8 items-center justify-center rounded-full border transition ${
-            isDark
-              ? "border-[#3a3a3a] bg-[#262626] text-[#e6e6e6] hover:bg-[#303030]"
-              : "border-[#ded9d1] bg-[#f7f7f5] text-[#5f5a52] hover:bg-[#e7e3dd]"
-          }`}
-          title={isDark ? "\u30e9\u30a4\u30c8\u30e2\u30fc\u30c9" : "\u30c0\u30fc\u30af\u30e2\u30fc\u30c9"}
-          aria-label={isDark ? "\u30e9\u30a4\u30c8\u30e2\u30fc\u30c9" : "\u30c0\u30fc\u30af\u30e2\u30fc\u30c9"}
-        >
-          {isDark ? (
-            <svg
-              aria-hidden="true"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            >
-              <circle cx="12" cy="12" r="4" />
-              <path d="M12 2v2.5M12 19.5V22M4.93 4.93 6.7 6.7M17.3 17.3l1.77 1.77M2 12h2.5M19.5 12H22M4.93 19.07 6.7 17.3M17.3 6.7l1.77-1.77" />
-            </svg>
-          ) : (
-            <svg
-              aria-hidden="true"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            >
-              <path d="M20.3 14.8A7.5 7.5 0 0 1 9.2 3.7 8.5 8.5 0 1 0 20.3 14.8Z" />
-            </svg>
-          )}
-        </button>
       </div>
     </aside>
   );
