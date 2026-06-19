@@ -4,31 +4,54 @@ import { useEffect, useState } from "react";
 
 const THEME_KEY = "simple-notion-theme";
 
-export type Theme = "light" | "dark";
+export type ThemeMode = "light" | "dark" | "system";
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [themeMode, setThemeMode] = useState<ThemeMode>("system");
+  const [systemIsDark, setSystemIsDark] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem(THEME_KEY);
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
-    if (savedTheme === "dark" || savedTheme === "light") {
-      setTheme(savedTheme);
+    if (
+      savedTheme === "dark" ||
+      savedTheme === "light" ||
+      savedTheme === "system"
+    ) {
+      setThemeMode(savedTheme);
     }
+
+    setSystemIsDark(mediaQuery.matches);
+    setIsLoaded(true);
+
+    function handleSystemThemeChange(event: MediaQueryListEvent) {
+      setSystemIsDark(event.matches);
+    }
+
+    mediaQuery.addEventListener("change", handleSystemThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleSystemThemeChange);
+    };
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(THEME_KEY, theme);
-    document.documentElement.style.colorScheme = theme;
-  }, [theme]);
+  const isDark =
+    themeMode === "dark" || (themeMode === "system" && systemIsDark);
 
-  function toggleTheme() {
-    setTheme((currentTheme) => (currentTheme === "light" ? "dark" : "light"));
-  }
+  useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
+
+    localStorage.setItem(THEME_KEY, themeMode);
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  }, [isDark, isLoaded, themeMode]);
 
   return {
-    isDark: theme === "dark",
-    theme,
-    toggleTheme,
+    isDark,
+    setThemeMode,
+    themeMode,
   };
 }

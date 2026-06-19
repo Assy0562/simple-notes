@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { ThemeSelector } from "@/components/ThemeSelector";
+import type { ThemeMode } from "@/hooks/useTheme";
 import type { TodoList } from "@/types/todo";
 
 const USER_NAME_KEY = "simple-notion-user-name";
@@ -9,24 +11,26 @@ const DEFAULT_USER_NAME = "Unknown";
 
 type TodoSidebarProps = {
   isDark: boolean;
+  themeMode: ThemeMode;
   selectedTodoListId: string;
   todoCountsByListId: Record<string, { active: number; total: number }>;
   todoLists: TodoList[];
   onCreateTodoList: () => void;
   onDeleteTodoList: (id: string) => void;
   onSelectTodoList: (id: string) => void;
-  onToggleTheme: () => void;
+  onChangeTheme: (themeMode: ThemeMode) => void;
 };
 
 export function TodoSidebar({
   isDark,
+  themeMode,
   selectedTodoListId,
   todoCountsByListId,
   todoLists,
   onCreateTodoList,
   onDeleteTodoList,
   onSelectTodoList,
-  onToggleTheme,
+  onChangeTheme,
 }: TodoSidebarProps) {
   const [userName, setUserName] = useState(DEFAULT_USER_NAME);
   const [draftUserName, setDraftUserName] = useState(DEFAULT_USER_NAME);
@@ -66,10 +70,6 @@ export function TodoSidebar({
     setIsSettingsOpen(false);
   }
 
-  function handleToggleTheme() {
-    onToggleTheme();
-    setIsSettingsOpen(false);
-  }
 
   return (
     <aside
@@ -243,20 +243,11 @@ export function TodoSidebar({
               ユーザー名を変更
             </button>
 
-            <button
-              type="button"
-              onClick={handleToggleTheme}
-              className={`flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm transition ${
-                isDark
-                  ? "text-[#e6e6e6] hover:bg-[#303030]"
-                  : "text-[#4f4b45] hover:bg-[#eeeae4]"
-              }`}
-            >
-              <span>テーマ切り替え</span>
-              <span className="text-xs opacity-70">
-                {isDark ? "ライト" : "ダーク"}
-              </span>
-            </button>
+            <ThemeSelector
+              isDark={isDark}
+              themeMode={themeMode}
+              onChangeTheme={onChangeTheme}
+            />
           </div>
         )}
       </div>

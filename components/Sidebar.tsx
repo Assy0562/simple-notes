@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { NoteList } from "@/components/NoteList";
+import { ThemeSelector } from "@/components/ThemeSelector";
+import type { ThemeMode } from "@/hooks/useTheme";
 import type { Note } from "@/types/note";
 
 const USER_NAME_KEY = "simple-notion-user-name";
@@ -10,6 +12,7 @@ const DEFAULT_USER_NAME = "Unknown";
 
 type SidebarProps = {
   isDark: boolean;
+  themeMode: ThemeMode;
   notes: Note[];
   selectedNoteId: string;
   onCreateLongTestNote: () => void;
@@ -20,7 +23,7 @@ type SidebarProps = {
   onDeleteNotes: (ids: string[]) => void;
   onResetNotes: () => void;
   onSelectNote: (id: string) => void;
-  onToggleTheme: () => void;
+  onChangeTheme: (themeMode: ThemeMode) => void;
   onTogglePinnedNote: (id: string) => void;
   onToggleArchivedNote: (id: string) => void;
 };
@@ -29,6 +32,7 @@ type SortMode = "updated-desc" | "created-desc" | "title-asc";
 
 export function Sidebar({
   isDark,
+  themeMode,
   notes,
   selectedNoteId,
   onCreateLongTestNote,
@@ -39,7 +43,7 @@ export function Sidebar({
   onDeleteNotes,
   onResetNotes,
   onSelectNote,
-  onToggleTheme,
+  onChangeTheme,
   onTogglePinnedNote,
   onToggleArchivedNote,
 }: SidebarProps) {
@@ -172,11 +176,6 @@ export function Sidebar({
     setIsDeveloperMenuOpen(false);
   }
 
-  function handleToggleTheme() {
-    onToggleTheme();
-    setIsSettingsOpen(false);
-    setIsDeveloperMenuOpen(false);
-  }
 
   function handleResetNotes() {
     onResetNotes();
@@ -285,7 +284,7 @@ export function Sidebar({
 
   return (
     <aside
-      className={`flex min-h-screen w-full flex-col border-r px-3 py-4 transition-colors md:w-72 ${
+      className={`flex min-h-[calc(100vh-57px)] w-full flex-col border-r px-3 py-4 transition-colors md:w-72 ${
         isDark
           ? "border-[#2f2f2f] bg-[#202020]"
           : "border-[#e4e1dc] bg-[#f1efeb]"
@@ -948,20 +947,11 @@ export function Sidebar({
                   {"\u30e6\u30fc\u30b6\u30fc\u540d\u3092\u5909\u66f4"}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handleToggleTheme}
-                  className={`flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm transition ${
-                    isDark
-                      ? "text-[#e6e6e6] hover:bg-[#303030]"
-                      : "text-[#4f4b45] hover:bg-[#eeeae4]"
-                  }`}
-                >
-                  <span>{"\u30c6\u30fc\u30de\u5207\u308a\u66ff\u3048"}</span>
-                  <span className="text-xs opacity-70">
-                    {isDark ? "\u30e9\u30a4\u30c8" : "\u30c0\u30fc\u30af"}
-                  </span>
-                </button>
+                <ThemeSelector
+                  isDark={isDark}
+                  themeMode={themeMode}
+                  onChangeTheme={onChangeTheme}
+                />
 
                 <button
                   onClick={handleResetNotes}

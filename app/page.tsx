@@ -52,7 +52,7 @@ export default function Home() {
     toggleTodo,
     updateSelectedTodoListTitle,
   } = useTodos();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, setThemeMode, themeMode } = useTheme();
   const [appMode, setAppMode] = useState<AppMode>("notes");
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [isMobileEditorOpen, setIsMobileEditorOpen] = useState(false);
@@ -199,6 +199,7 @@ export default function Home() {
           <div className={isMobileEditorOpen ? "hidden md:block" : "block"}>
             <Sidebar
               isDark={isDark}
+              themeMode={themeMode}
               notes={notes}
               selectedNoteId={selectedNoteId}
               onCreateLongTestNote={handleCreateLongTestNote}
@@ -209,7 +210,7 @@ export default function Home() {
               onDeleteNotes={requestDeleteNotes}
               onResetNotes={resetNotes}
               onSelectNote={handleSelectNote}
-              onToggleTheme={toggleTheme}
+              onChangeTheme={setThemeMode}
               onTogglePinnedNote={togglePinnedNote}
               onToggleArchivedNote={toggleArchivedNote}
             />
@@ -239,13 +240,14 @@ export default function Home() {
           <div className={isMobileTodoPanelOpen ? "hidden md:block" : "block"}>
             <TodoSidebar
               isDark={isDark}
+              themeMode={themeMode}
               selectedTodoListId={selectedTodoListId}
               todoCountsByListId={todoCountsByListId}
               todoLists={todoLists}
               onCreateTodoList={handleCreateTodoList}
               onDeleteTodoList={deleteTodoList}
               onSelectTodoList={handleSelectTodoList}
-              onToggleTheme={toggleTheme}
+              onChangeTheme={setThemeMode}
             />
           </div>
 
