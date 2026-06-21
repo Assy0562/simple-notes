@@ -284,7 +284,7 @@ export function Sidebar({
 
   return (
     <aside
-      className={`flex min-h-[calc(100vh-57px)] w-full flex-col border-r px-3 py-4 transition-colors md:w-72 ${
+      className={`flex min-h-[calc(100vh-57px)] w-full flex-col border-r px-3 py-4 transition-colors md:w-72 md:shrink-0 ${
         isDark
           ? "border-[#2f2f2f] bg-[#202020]"
           : "border-[#e4e1dc] bg-[#f1efeb]"

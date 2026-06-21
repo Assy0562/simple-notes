@@ -31,9 +31,15 @@ export function useTodos() {
       const parsedTodoData = parseSavedTodoData(savedTodoData);
 
       if (parsedTodoData) {
+        const firstActiveList = parsedTodoData.lists.find(
+          (list) => !list.isArchived,
+        );
+
         setTodoLists(parsedTodoData.lists);
         setTodos(parsedTodoData.todos);
-        setSelectedTodoListId(parsedTodoData.lists[0].id);
+        setSelectedTodoListId(
+          firstActiveList?.id ?? parsedTodoData.lists[0].id,
+        );
       } else {
         localStorage.removeItem(TODO_STORAGE_KEY);
       }
@@ -97,6 +103,9 @@ export function useTodos() {
     const newTodoList: TodoList = {
       id: createTodoListId(),
       title: "新しいリスト",
+      isArchived: false,
+      isPinned: false,
+      tags: [],
       createdAt: today,
       updatedAt: today,
     };
@@ -127,22 +136,104 @@ export function useTodos() {
     );
   }
 
-  function deleteTodoList(todoListId: string) {
-    if (todoLists.length <= 1) {
+  function updateSelectedTodoListTags(tags: string[]) {
+    const normalizedTags = Array.from(
+      new Set(tags.map((tag) => tag.trim()).filter((tag) => tag !== "")),
+    );
+
+    setTodoLists((currentLists) =>
+      currentLists.map((list) =>
+        list.id === selectedTodoList.id
+          ? {
+              ...list,
+              tags: normalizedTags,
+              updatedAt: getTodayText(),
+            }
+          : list,
+      ),
+    );
+  }
+  function setTodoListsArchived(todoListIds: string[], isArchived: boolean) {
+    if (todoListIds.length === 0) {
       return;
     }
 
-    const nextLists = todoLists.filter((list) => list.id !== todoListId);
+    setTodoLists((currentLists) => {
+      const nextLists = currentLists.map((list) =>
+        todoListIds.includes(list.id)
+          ? { ...list, isArchived, updatedAt: getTodayText() }
+          : list,
+      );
+
+      if (todoListIds.includes(selectedTodoListId)) {
+        const nextVisibleList = nextLists.find(
+          (list) => list.isArchived !== isArchived,
+        );
+
+        setSelectedTodoListId(nextVisibleList?.id ?? nextLists[0].id);
+        setFilter("all");
+      }
+
+      return nextLists;
+    });
+  }
+
+  function toggleArchivedTodoList(todoListId: string) {
+    const targetList = todoLists.find((list) => list.id === todoListId);
+
+    if (!targetList) {
+      return;
+    }
+
+    setTodoListsArchived([todoListId], !targetList.isArchived);
+  }
+
+  function togglePinnedTodoList(todoListId: string) {
+    setTodoLists((currentLists) =>
+      currentLists.map((list) =>
+        list.id === todoListId
+          ? {
+              ...list,
+              isPinned: !list.isPinned,
+              updatedAt: getTodayText(),
+            }
+          : list,
+      ),
+    );
+  }
+
+  function resetTodos() {
+    setTodoLists(initialTodoLists);
+    setTodos(initialTodos);
+    setSelectedTodoListId(initialTodoLists[0].id);
+    setFilter("all");
+  }
+  function deleteTodoLists(todoListIds: string[]) {
+    if (
+      todoListIds.length === 0 ||
+      todoLists.length - todoListIds.length < 1
+    ) {
+      return;
+    }
+
+    const nextLists = todoLists.filter(
+      (list) => !todoListIds.includes(list.id),
+    );
 
     setTodoLists(nextLists);
     setTodos((currentTodos) =>
-      currentTodos.filter((todo) => todo.listId !== todoListId),
+      currentTodos.filter((todo) => !todoListIds.includes(todo.listId)),
     );
 
-    if (selectedTodoListId === todoListId) {
-      setSelectedTodoListId(nextLists[0].id);
+    if (todoListIds.includes(selectedTodoListId)) {
+      const nextActiveList = nextLists.find((list) => !list.isArchived);
+      setSelectedTodoListId(nextActiveList?.id ?? nextLists[0].id);
       setFilter("all");
     }
+  }
+
+  function deleteTodoList(todoListId: string) {
+    deleteTodoLists([todoListId]);
   }
 
   function createTodo(title: string) {
@@ -216,9 +307,15 @@ export function useTodos() {
     createTodoList,
     deleteTodo,
     deleteTodoList,
+    deleteTodoLists,
+    resetTodos,
     selectTodoList,
     setFilter,
+    setTodoListsArchived,
+    toggleArchivedTodoList,
+    togglePinnedTodoList,
     toggleTodo,
+    updateSelectedTodoListTags,
     updateSelectedTodoListTitle,
   };
 }

@@ -12,12 +12,18 @@ export const initialTodoLists: TodoList[] = [
   {
     id: DEFAULT_TODO_LIST_ID,
     title: "今日のToDo",
+    isArchived: false,
+    isPinned: false,
+    tags: [],
     createdAt: "2026/06/18",
     updatedAt: "2026/06/18",
   },
   {
     id: "todo-list-learning",
     title: "学習メモ用",
+    isArchived: false,
+    isPinned: false,
+    tags: [],
     createdAt: "2026/06/18",
     updatedAt: "2026/06/18",
   },
@@ -82,6 +88,19 @@ function normalizeTodoList(value: unknown): TodoList | null {
   return {
     id: String(value.id),
     title: value.title.trim() || "無題のリスト",
+    isArchived:
+      typeof value.isArchived === "boolean" ? value.isArchived : false,
+    isPinned: typeof value.isPinned === "boolean" ? value.isPinned : false,
+    tags: Array.isArray(value.tags)
+      ? Array.from(
+          new Set(
+            value.tags
+              .filter((tag): tag is string => typeof tag === "string")
+              .map((tag) => tag.trim())
+              .filter((tag) => tag !== ""),
+          ),
+        )
+      : [],
     createdAt:
       typeof value.createdAt === "string" ? value.createdAt : value.updatedAt,
     updatedAt: value.updatedAt,
@@ -117,7 +136,7 @@ export function parseSavedTodoData(value: string): SavedTodoData | null {
   try {
     const parsedValue = JSON.parse(value) as unknown;
 
-    // 以前の保存形式は Todo[] だけだったので、読み込めるようにしておきます。
+    // 以前の保存形式はTodo配列だけだったため、既定リストへ移行します。
     if (Array.isArray(parsedValue)) {
       const todos = parsedValue
         .map((item) => normalizeTodo(item, DEFAULT_TODO_LIST_ID))

@@ -1,6 +1,9 @@
 export type TodoList = {
   id: string;
   title: string;
+  isArchived: boolean;
+  isPinned: boolean;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
 };

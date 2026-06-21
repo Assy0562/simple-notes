@@ -42,14 +42,21 @@ export default function Home() {
     selectedTodoListId,
     todoCountsByListId,
     todoLists,
+    todos,
     clearCompletedTodos,
     createTodo,
     createTodoList,
     deleteTodo,
     deleteTodoList,
+    deleteTodoLists,
+    resetTodos,
     selectTodoList,
     setFilter: setTodoFilter,
+    setTodoListsArchived,
+    toggleArchivedTodoList,
+    togglePinnedTodoList,
     toggleTodo,
+    updateSelectedTodoListTags,
     updateSelectedTodoListTitle,
   } = useTodos();
   const { isDark, setThemeMode, themeMode } = useTheme();
@@ -74,6 +81,19 @@ export default function Home() {
         ),
       ),
     [notes],
+  );
+  const recentTodoTags = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [...todoLists]
+            .sort((firstList, secondList) =>
+              secondList.updatedAt.localeCompare(firstList.updatedAt),
+            )
+            .flatMap((list) => list.tags),
+        ),
+      ),
+    [todoLists],
   );
 
   function requestDeleteNote(noteId: string) {
@@ -244,9 +264,15 @@ export default function Home() {
               selectedTodoListId={selectedTodoListId}
               todoCountsByListId={todoCountsByListId}
               todoLists={todoLists}
+              todos={todos}
+              onArchiveTodoLists={setTodoListsArchived}
               onCreateTodoList={handleCreateTodoList}
               onDeleteTodoList={deleteTodoList}
+              onDeleteTodoLists={deleteTodoLists}
+              onResetTodos={resetTodos}
               onSelectTodoList={handleSelectTodoList}
+              onToggleArchivedTodoList={toggleArchivedTodoList}
+              onTogglePinnedTodoList={togglePinnedTodoList}
               onChangeTheme={setThemeMode}
             />
           </div>
@@ -260,6 +286,7 @@ export default function Home() {
           >
             <TodoPanel
               activeTodoCount={activeTodoCount}
+              allTags={recentTodoTags}
               completedTodoCount={completedTodoCount}
               filter={todoFilter}
               isDark={isDark}
@@ -271,6 +298,7 @@ export default function Home() {
               onDeleteTodo={deleteTodo}
               onSetFilter={setTodoFilter}
               onToggleTodo={toggleTodo}
+              onUpdateTodoListTags={updateSelectedTodoListTags}
               onUpdateTodoListTitle={updateSelectedTodoListTitle}
             />
           </div>
