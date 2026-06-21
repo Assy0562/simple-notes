@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { NoteList } from "@/components/NoteList";
+import { ResetConfirmModal } from "@/components/ResetConfirmModal";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import type { ThemeMode } from "@/hooks/useTheme";
 import type { Note } from "@/types/note";
@@ -53,6 +54,7 @@ export function Sidebar({
   const [isEditingUserName, setIsEditingUserName] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDeveloperMenuOpen, setIsDeveloperMenuOpen] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isNoteListOpen, setIsNoteListOpen] = useState(true);
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [isTagFilterOpen, setIsTagFilterOpen] = useState(false);
@@ -177,10 +179,15 @@ export function Sidebar({
   }
 
 
-  function handleResetNotes() {
-    onResetNotes();
+  function requestResetNotes() {
     setIsSettingsOpen(false);
     setIsDeveloperMenuOpen(false);
+    setIsResetConfirmOpen(true);
+  }
+
+  function confirmResetNotes() {
+    onResetNotes();
+    setIsResetConfirmOpen(false);
   }
 
   function handleCreateLongTestNote() {
@@ -932,6 +939,11 @@ export function Sidebar({
                 >
                   {"\u30b5\u30f3\u30d7\u30eb\u30e1\u30e210\u4ef6\u3092\u8ffd\u52a0"}
                 </button>
+
+                <div className={`my-1 border-t ${isDark ? "border-[#333333]" : "border-[#e4e1dc]"}`} />
+                <button type="button" onClick={requestResetNotes} className={`w-full rounded px-3 py-2 text-left text-sm transition ${isDark ? "text-[#e8b2b2] hover:bg-[#3a2b2b]" : "text-[#a34838] hover:bg-[#fff0ec]"}`}>
+                  初期メモに戻す
+                </button>
               </>
             ) : (
               <>
@@ -953,18 +965,7 @@ export function Sidebar({
                   onChangeTheme={onChangeTheme}
                 />
 
-                <button
-                  onClick={handleResetNotes}
-                  className={`w-full rounded px-3 py-2 text-left text-sm transition ${
-                    isDark
-                      ? "text-[#e6e6e6] hover:bg-[#303030]"
-                      : "text-[#4f4b45] hover:bg-[#eeeae4]"
-                  }`}
-                >
-                  {"\u521d\u671f\u30e1\u30e2\u306b\u623b\u3059"}
-                </button>
-
-                <button
+              <button
                   type="button"
                   onClick={() => setIsDeveloperMenuOpen(true)}
                   className={`flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm transition ${
@@ -982,6 +983,13 @@ export function Sidebar({
         )}
 
       </div>
-    </aside>
+      <ResetConfirmModal
+        description="現在のメモをすべて削除し、初期メモへ戻します。この操作は元に戻せません。"
+        isDark={isDark}
+        isOpen={isResetConfirmOpen}
+        onCancel={() => setIsResetConfirmOpen(false)}
+        onConfirm={confirmResetNotes}
+        title="初期メモに戻しますか？"
+      />    </aside>
   );
 }

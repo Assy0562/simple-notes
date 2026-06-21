@@ -9,6 +9,7 @@ import TaskList from "@tiptap/extension-task-list";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
+import { BackToListButton } from "@/components/BackToListButton";
 import type { Note } from "@/types/note";
 
 const MarkdownShortcuts = Extension.create({
@@ -158,20 +159,8 @@ export function NoteEditor({
   return (
     <section className="flex-1 px-4 py-5 md:px-8 md:py-10">
       <article className="mx-auto max-w-3xl">
-        {onBackToList && (
-          <button
-            type="button"
-            onClick={onBackToList}
-            className={`mb-5 inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition md:hidden ${
-              isDark
-                ? "border-[#333333] bg-[#242424] text-[#d6d6d6] hover:bg-[#2d2d2d]"
-                : "border-[#ded9d1] bg-[#f7f7f5] text-[#4f4b45] hover:bg-[#eee9e1]"
-            }`}
-          >
-            <span aria-hidden="true">{"\u2190"}</span>
-            <span>{"\u4e00\u89a7\u3078\u623b\u308b"}</span>
-          </button>
-        )}
+        {onBackToList && <BackToListButton isDark={isDark} onClick={onBackToList} />}
+
         <div
           className={`mb-6 border-b pb-4 text-xs ${
             isDark

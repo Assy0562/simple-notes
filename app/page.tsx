@@ -45,6 +45,7 @@ export default function Home() {
     todos,
     clearCompletedTodos,
     createTodo,
+    createSampleTodoLists,
     createTodoList,
     deleteTodo,
     deleteTodoList,
@@ -52,6 +53,7 @@ export default function Home() {
     resetTodos,
     selectTodoList,
     setFilter: setTodoFilter,
+    setSelectedTodosCompleted,
     setTodoListsArchived,
     toggleArchivedTodoList,
     togglePinnedTodoList,
@@ -129,6 +131,11 @@ export default function Home() {
   function handleSelectNote(noteId: string) {
     selectNote(noteId);
     setIsMobileEditorOpen(true);
+  }
+
+  function handleCreateSampleTodoLists() {
+    createSampleTodoLists();
+    setIsMobileTodoPanelOpen(true);
   }
 
   function handleCreateTodoList() {
@@ -266,6 +273,7 @@ export default function Home() {
               todoLists={todoLists}
               todos={todos}
               onArchiveTodoLists={setTodoListsArchived}
+              onCreateSampleTodoLists={handleCreateSampleTodoLists}
               onCreateTodoList={handleCreateTodoList}
               onDeleteTodoList={deleteTodoList}
               onDeleteTodoLists={deleteTodoLists}
@@ -296,6 +304,7 @@ export default function Home() {
               onClearCompletedTodos={clearCompletedTodos}
               onCreateTodo={createTodo}
               onDeleteTodo={deleteTodo}
+              onSetAllTodosCompleted={setSelectedTodosCompleted}
               onSetFilter={setTodoFilter}
               onToggleTodo={toggleTodo}
               onUpdateTodoListTags={updateSelectedTodoListTags}

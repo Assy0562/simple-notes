@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 
+import { ResetConfirmModal } from "@/components/ResetConfirmModal";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import type { ThemeMode } from "@/hooks/useTheme";
 import type { Todo, TodoList } from "@/types/todo";
@@ -20,6 +21,7 @@ type TodoSidebarProps = {
   todos: Todo[];
   onArchiveTodoLists: (ids: string[], isArchived: boolean) => void;
   onChangeTheme: (themeMode: ThemeMode) => void;
+  onCreateSampleTodoLists: () => void;
   onCreateTodoList: () => void;
   onDeleteTodoList: (id: string) => void;
   onDeleteTodoLists: (ids: string[]) => void;
@@ -38,6 +40,7 @@ export function TodoSidebar({
   todos,
   onArchiveTodoLists,
   onChangeTheme,
+  onCreateSampleTodoLists,
   onCreateTodoList,
   onDeleteTodoList,
   onDeleteTodoLists,
@@ -50,6 +53,8 @@ export function TodoSidebar({
   const [draftUserName, setDraftUserName] = useState(DEFAULT_USER_NAME);
   const [isEditingUserName, setIsEditingUserName] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isDeveloperMenuOpen, setIsDeveloperMenuOpen] = useState(false);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isArchiveView, setIsArchiveView] = useState(false);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedTodoListIds, setSelectedTodoListIds] = useState<string[]>([]);
@@ -194,17 +199,33 @@ export function TodoSidebar({
   function handleStartEditingUserName() {
     startEditingUserName();
     setIsSettingsOpen(false);
+    setIsDeveloperMenuOpen(false);
   }
 
-  function handleResetTodos() {
+  function requestResetTodos() {
+    setIsSettingsOpen(false);
+    setIsDeveloperMenuOpen(false);
+    setIsResetConfirmOpen(true);
+  }
+
+  function confirmResetTodos() {
     onResetTodos();
     setSelectedTags([]);
     setTagFilterText("");
     setIsArchiveView(false);
     setSearchText("");
-    setIsSettingsOpen(false);
     setIsSelectionMode(false);
     setSelectedTodoListIds([]);
+    setIsResetConfirmOpen(false);
+  }
+  function handleCreateSampleTodoLists() {
+    onCreateSampleTodoLists();
+    setSelectedTags([]);
+    setTagFilterText("");
+    setIsArchiveView(false);
+    setSearchText("");
+    setIsSettingsOpen(false);
+    setIsDeveloperMenuOpen(false);
   }
 
   function handleCreateTodoList() {
@@ -213,7 +234,6 @@ export function TodoSidebar({
     setIsSelectionMode(false);
     setSelectedTodoListIds([]);
   }
-
   function startSelectionMode() {
     setIsSelectionMode(true);
     setSelectedTodoListIds([]);
@@ -542,7 +562,14 @@ export function TodoSidebar({
       >
         <button
           type="button"
-          onClick={() => setIsSettingsOpen((isOpen) => !isOpen)}
+          onClick={() =>
+            setIsSettingsOpen((isOpen) => {
+              if (isOpen) {
+                setIsDeveloperMenuOpen(false);
+              }
+              return !isOpen;
+            })
+          }
           className={`flex h-8 w-8 items-center justify-center rounded-full border transition ${
             isDark
               ? "border-[#3a3a3a] bg-[#262626] text-[#e6e6e6] hover:bg-[#303030]"
@@ -563,29 +590,37 @@ export function TodoSidebar({
                 : "border-[#e4e1dc] bg-[#fbfaf8]"
             }`}
           >
-            <button
-              type="button"
-              onClick={handleStartEditingUserName}
-              className={menuItemClass(isDark)}
-            >
-              ユーザー名を変更
-            </button>
-            <ThemeSelector
-              isDark={isDark}
-              themeMode={themeMode}
-              onChangeTheme={onChangeTheme}
-            />
-            <button
-              type="button"
-              onClick={handleResetTodos}
-              className={menuItemClass(isDark)}
-            >
-              初期ToDoに戻す
-            </button>
+            {isDeveloperMenuOpen ? (
+              <>
+                <button type="button" onClick={() => setIsDeveloperMenuOpen(false)} className={`mb-1 flex w-full items-center gap-2 rounded px-3 py-2 text-left text-xs transition ${isDark ? "text-[#bdbdbd] hover:bg-[#303030]" : "text-[#6f6a62] hover:bg-[#eeeae4]"}`}>
+                  <span aria-hidden="true">‹</span>
+                  設定に戻る
+                </button>
+                <div className={`mb-1 border-t ${isDark ? "border-[#333333]" : "border-[#e4e1dc]"}`} />
+                <button type="button" onClick={handleCreateSampleTodoLists} className={menuItemClass(isDark)}>サンプルToDoリスト10件を追加</button>
+                <div className={`my-1 border-t ${isDark ? "border-[#333333]" : "border-[#e4e1dc]"}`} />
+                <button type="button" onClick={requestResetTodos} className={`w-full rounded px-3 py-2 text-left text-sm transition ${isDark ? "text-[#e8b2b2] hover:bg-[#3a2b2b]" : "text-[#a34838] hover:bg-[#fff0ec]"}`}>
+                  初期ToDoに戻す
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={handleStartEditingUserName} className={menuItemClass(isDark)}>ユーザー名を変更</button>
+                <ThemeSelector isDark={isDark} themeMode={themeMode} onChangeTheme={onChangeTheme} />
+                <button type="button" onClick={() => setIsDeveloperMenuOpen(true)} className={`flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm transition ${isDark ? "text-[#e6e6e6] hover:bg-[#303030]" : "text-[#4f4b45] hover:bg-[#eeeae4]"}`}><span>開発者コマンド</span><span aria-hidden="true">›</span></button>
+              </>
+            )}
           </div>
         )}
       </div>
-    </aside>
+      <ResetConfirmModal
+        description="現在のToDoリストとタスクをすべて削除し、初期ToDoへ戻します。この操作は元に戻せません。"
+        isDark={isDark}
+        isOpen={isResetConfirmOpen}
+        onCancel={() => setIsResetConfirmOpen(false)}
+        onConfirm={confirmResetTodos}
+        title="初期ToDoに戻しますか？"
+      />    </aside>
   );
 }
 

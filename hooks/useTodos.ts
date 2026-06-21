@@ -14,6 +14,18 @@ import {
 import type { Todo, TodoList } from "@/types/todo";
 
 type TodoFilter = "all" | "active" | "completed";
+const sampleTodoData = [
+  { title: "週末の買い物", tags: ["生活", "買い物"], todos: [{ title: "牛乳と卵を買う", completed: false }, { title: "洗剤の残量を確認する", completed: true }, { title: "来週分のコーヒー豆を選ぶ", completed: false }] },
+  { title: "部屋の片付け", tags: ["生活", "掃除"], todos: [{ title: "机の上を整理する", completed: true }, { title: "本棚をジャンル別に並べる", completed: false }, { title: "不要な書類をまとめる", completed: false }] },
+  { title: "読みたい本", tags: ["読書", "趣味"], todos: [{ title: "積読から次の一冊を選ぶ", completed: false }, { title: "図書館の貸出期限を確認する", completed: false }] },
+  { title: "旅行の準備", tags: ["旅行", "予定"], todos: [{ title: "宿泊先を確認する", completed: true }, { title: "持ち物リストを見直す", completed: false }, { title: "現地の天気を調べる", completed: false }] },
+  { title: "朝の習慣", tags: ["習慣", "健康"], todos: [{ title: "コップ一杯の水を飲む", completed: true }, { title: "10分だけストレッチする", completed: false }, { title: "今日の予定を確認する", completed: false }] },
+  { title: "料理してみたいもの", tags: ["料理", "趣味"], todos: [{ title: "スパイスカレーの材料を調べる", completed: false }, { title: "だし巻き卵を練習する", completed: false }] },
+  { title: "今月やること", tags: ["予定", "重要"], isPinned: true, todos: [{ title: "定期契約を見直す", completed: false }, { title: "写真のバックアップを取る", completed: false }, { title: "歯科検診を予約する", completed: true }] },
+  { title: "休日のアイデア", tags: ["休日", "アイデア"], todos: [{ title: "近所の喫茶店へ行く", completed: false }, { title: "気になっていた映画を見る", completed: false }, { title: "夕方に散歩する", completed: false }] },
+  { title: "防災用品の確認", tags: ["生活", "重要"], todos: [{ title: "飲料水の期限を確認する", completed: true }, { title: "懐中電灯の電池を交換する", completed: false }, { title: "避難場所を家族と確認する", completed: false }] },
+  { title: "小さな挑戦", tags: ["習慣", "アイデア"], todos: [{ title: "普段と違う道を歩く", completed: false }, { title: "新しい料理を一品作る", completed: false }, { title: "寝る前に今日の良かったことを書く", completed: true }] },
+];
 
 export function useTodos() {
   const [todoLists, setTodoLists] = useState<TodoList[]>(initialTodoLists);
@@ -202,6 +214,33 @@ export function useTodos() {
     );
   }
 
+  function createSampleTodoLists() {
+    const today = getTodayText();
+    const sampleLists = sampleTodoData.map((sample) => ({
+      id: createTodoListId(),
+      title: sample.title,
+      isArchived: false,
+      isPinned: sample.isPinned ?? false,
+      tags: sample.tags,
+      createdAt: today,
+      updatedAt: today,
+    }));
+    const sampleTodos = sampleTodoData.flatMap((sample, listIndex) =>
+      sample.todos.map((todo) => ({
+        id: createTodoId(),
+        listId: sampleLists[listIndex].id,
+        title: todo.title,
+        completed: todo.completed,
+        createdAt: today,
+        updatedAt: today,
+      })),
+    );
+
+    setTodoLists((currentLists) => [...sampleLists, ...currentLists]);
+    setTodos((currentTodos) => [...sampleTodos, ...currentTodos]);
+    setSelectedTodoListId(sampleLists[0].id);
+    setFilter("all");
+  }
   function resetTodos() {
     setTodoLists(initialTodoLists);
     setTodos(initialTodos);
@@ -278,6 +317,23 @@ export function useTodos() {
     );
   }
 
+  function setSelectedTodosCompleted(completed: boolean) {
+    const today = getTodayText();
+
+    // 選択中のリストに属するToDoだけを、一括で同じ完了状態にします。
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.listId === selectedTodoList.id
+          ? { ...todo, completed, updatedAt: today }
+          : todo,
+      ),
+    );
+    setTodoLists((currentLists) =>
+      currentLists.map((list) =>
+        list.id === selectedTodoList.id ? { ...list, updatedAt: today } : list,
+      ),
+    );
+  }
   function deleteTodo(todoId: string) {
     setTodos((currentTodos) =>
       currentTodos.filter((todo) => todo.id !== todoId),
@@ -305,6 +361,7 @@ export function useTodos() {
     clearCompletedTodos,
     createTodo,
     createTodoList,
+    createSampleTodoLists,
     deleteTodo,
     deleteTodoList,
     deleteTodoLists,
@@ -312,6 +369,7 @@ export function useTodos() {
     selectTodoList,
     setFilter,
     setTodoListsArchived,
+    setSelectedTodosCompleted,
     toggleArchivedTodoList,
     togglePinnedTodoList,
     toggleTodo,
