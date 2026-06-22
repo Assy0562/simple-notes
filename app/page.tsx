@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { NoteEditor } from "@/components/NoteEditor";
 import { Sidebar } from "@/components/Sidebar";
+import { TodoDeleteConfirmModal } from "@/components/TodoDeleteConfirmModal";
 import { TodoPanel } from "@/components/TodoPanel";
 import { TodoSidebar } from "@/components/TodoSidebar";
 import { useNotes } from "@/hooks/useNotes";
@@ -48,6 +49,7 @@ export default function Home() {
     createSampleTodoLists,
     createTodoList,
     deleteTodo,
+    deleteTodos,
     deleteTodoList,
     deleteTodoLists,
     resetTodos,
@@ -64,12 +66,37 @@ export default function Home() {
   const { isDark, setThemeMode, themeMode } = useTheme();
   const [appMode, setAppMode] = useState<AppMode>("notes");
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
+  const [todoDeleteTarget, setTodoDeleteTarget] = useState<{ kind: "todo" | "list"; ids: string[] } | null>(null);
   const [isMobileEditorOpen, setIsMobileEditorOpen] = useState(false);
   const [isMobileTodoPanelOpen, setIsMobileTodoPanelOpen] = useState(false);
 
   const deleteTargetNotes = useMemo(
     () => notes.filter((note) => deleteTargetIds.includes(note.id)),
     [deleteTargetIds, notes],
+  );
+  const deleteTargetTodos = useMemo(
+    () =>
+      todoDeleteTarget?.kind === "todo"
+        ? todos.filter((todo) => todoDeleteTarget.ids.includes(todo.id))
+        : [],
+    [todoDeleteTarget, todos],
+  );
+  const deleteTargetTodoLists = useMemo(
+    () =>
+      todoDeleteTarget?.kind === "list"
+        ? todoLists.filter((list) => todoDeleteTarget.ids.includes(list.id))
+        : [],
+    [todoDeleteTarget, todoLists],
+  );
+  const affectedTodoCount = useMemo(
+    () =>
+      todos.filter((todo) =>
+        deleteTargetTodoLists.some((list) => list.id === todo.listId),
+      ).length,
+    [deleteTargetTodoLists, todos],
+  );  const selectedTodoListTodos = useMemo(
+    () => todos.filter((todo) => todo.listId === selectedTodoList.id),
+    [selectedTodoList.id, todos],
   );
   const recentTags = useMemo(
     () =>
@@ -122,6 +149,37 @@ export default function Home() {
     setIsMobileEditorOpen(true);
   }
 
+  function requestDeleteTodo(todoId: string) {
+    setTodoDeleteTarget({ kind: "todo", ids: [todoId] });
+  }
+
+  function requestDeleteTodoList(todoListId: string) {
+    setTodoDeleteTarget({ kind: "list", ids: [todoListId] });
+  }
+
+  function requestDeleteTodoLists(todoListIds: string[]) {
+    setTodoDeleteTarget({ kind: "list", ids: todoListIds });
+  }
+
+  function confirmDeleteTodos() {
+    if (!todoDeleteTarget || todoDeleteTarget.ids.length === 0) {
+      return;
+    }
+
+    if (todoDeleteTarget.kind === "todo") {
+      if (todoDeleteTarget.ids.length === 1) {
+        deleteTodo(todoDeleteTarget.ids[0]);
+      } else {
+        deleteTodos(todoDeleteTarget.ids);
+      }
+    } else if (todoDeleteTarget.ids.length === 1) {
+      deleteTodoList(todoDeleteTarget.ids[0]);
+    } else {
+      deleteTodoLists(todoDeleteTarget.ids);
+    }
+
+    setTodoDeleteTarget(null);
+  }
   function changeAppMode(nextMode: AppMode) {
     setAppMode(nextMode);
     setIsMobileEditorOpen(false);
@@ -223,7 +281,7 @@ export default function Home() {
 
       {appMode === "notes" ? (
         <div className="min-h-[calc(100vh-57px)] md:flex">
-          <div className={isMobileEditorOpen ? "hidden md:block" : "block"}>
+          <div className={isMobileEditorOpen ? "hidden md:flex md:self-stretch" : "block md:flex md:self-stretch"}>
             <Sidebar
               isDark={isDark}
               themeMode={themeMode}
@@ -264,7 +322,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="min-h-[calc(100vh-57px)] md:flex">
-          <div className={isMobileTodoPanelOpen ? "hidden md:block" : "block"}>
+          <div className={isMobileTodoPanelOpen ? "hidden md:flex md:self-stretch" : "block md:flex md:self-stretch"}>
             <TodoSidebar
               isDark={isDark}
               themeMode={themeMode}
@@ -275,8 +333,8 @@ export default function Home() {
               onArchiveTodoLists={setTodoListsArchived}
               onCreateSampleTodoLists={handleCreateSampleTodoLists}
               onCreateTodoList={handleCreateTodoList}
-              onDeleteTodoList={deleteTodoList}
-              onDeleteTodoLists={deleteTodoLists}
+              onDeleteTodoList={requestDeleteTodoList}
+              onDeleteTodoLists={requestDeleteTodoLists}
               onResetTodos={resetTodos}
               onSelectTodoList={handleSelectTodoList}
               onToggleArchivedTodoList={toggleArchivedTodoList}
@@ -294,6 +352,7 @@ export default function Home() {
           >
             <TodoPanel
               activeTodoCount={activeTodoCount}
+              allTodos={selectedTodoListTodos}
               allTags={recentTodoTags}
               completedTodoCount={completedTodoCount}
               filter={todoFilter}
@@ -303,7 +362,10 @@ export default function Home() {
               onBackToLists={() => setIsMobileTodoPanelOpen(false)}
               onClearCompletedTodos={clearCompletedTodos}
               onCreateTodo={createTodo}
-              onDeleteTodo={deleteTodo}
+              onDeleteTodo={requestDeleteTodo}
+              onDeleteTodos={(todoIds) =>
+                setTodoDeleteTarget({ kind: "todo", ids: todoIds })
+              }
               onSetAllTodosCompleted={setSelectedTodosCompleted}
               onSetFilter={setTodoFilter}
               onToggleTodo={toggleTodo}
@@ -314,7 +376,14 @@ export default function Home() {
         </div>
       )}
 
-      <DeleteConfirmModal
+      <TodoDeleteConfirmModal
+        affectedTaskCount={affectedTodoCount}
+        isDark={isDark}
+        todoLists={deleteTargetTodoLists}
+        todos={deleteTargetTodos}
+        onCancel={() => setTodoDeleteTarget(null)}
+        onConfirm={confirmDeleteTodos}
+      />      <DeleteConfirmModal
         isDark={isDark}
         notes={deleteTargetNotes}
         onCancel={() => setDeleteTargetIds([])}

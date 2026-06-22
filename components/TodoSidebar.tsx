@@ -282,7 +282,7 @@ export function TodoSidebar({
 
   return (
     <aside
-      className={`flex min-h-[calc(100vh-57px)] w-full flex-col border-r px-3 py-4 transition-colors md:w-72 md:shrink-0 ${
+      className={`flex min-h-[calc(100vh-57px)] w-full md:min-h-screen flex-col border-r px-3 py-4 transition-colors md:w-72 md:shrink-0 md:flex-1 ${
         isDark
           ? "border-[#2f2f2f] bg-[#202020]"
           : "border-[#e4e1dc] bg-[#f1efeb]"

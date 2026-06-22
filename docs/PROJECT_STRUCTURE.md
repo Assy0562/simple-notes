@@ -11,6 +11,7 @@ simple-memo/
   hooks/
   lib/
   types/
+  docs/
   public/
   README.md
   package.json
@@ -29,13 +30,38 @@ components/ UI部品
 hooks/       状態管理や保存処理
 lib/         汎用的な関数や初期データ
 types/       TypeScriptの型定義
+docs/        学習資料と実装判断の記録
 ```
 
+## docs/
+
+学習用の説明や、実装時の判断理由を残すディレクトリです。
+
+### docs/PROJECT_STRUCTURE.md
+
+各ディレクトリとファイルの役割を説明します。
+
+### docs/IMPLEMENTATION_NOTES.md
+
+機能追加や不具合修正について、変更内容・理由・採用方法・代替案・確認結果を記録します。
+今後の実装では、判断を伴う変更ごとに追記します。
 ## app/
 
 Next.js の画面や全体設定を置くディレクトリです。
 
-### app/page.tsx
+### docs/
+
+学習用の説明や、実装時の判断理由を残すディレクトリです。
+
+### docs/PROJECT_STRUCTURE.md
+
+各ディレクトリとファイルの役割を説明します。
+
+### docs/IMPLEMENTATION_NOTES.md
+
+機能追加や不具合修正について、変更内容・理由・採用方法・代替案・確認結果を記録します。
+今後の実装では、判断を伴う変更ごとに追記します。
+## app/page.tsx
 
 トップページの本体です。
 
@@ -53,7 +79,19 @@ Next.js の画面や全体設定を置くディレクトリです。
 `page.tsx` は「アプリ全体を組み立てる場所」です。  
 細かいUIや処理を全部ここに書きすぎると読みにくくなるため、必要に応じて `components/` や `hooks/` に分けています。
 
-### app/layout.tsx
+### docs/
+
+学習用の説明や、実装時の判断理由を残すディレクトリです。
+
+### docs/PROJECT_STRUCTURE.md
+
+各ディレクトリとファイルの役割を説明します。
+
+### docs/IMPLEMENTATION_NOTES.md
+
+機能追加や不具合修正について、変更内容・理由・採用方法・代替案・確認結果を記録します。
+今後の実装では、判断を伴う変更ごとに追記します。
+## app/layout.tsx
 
 アプリ全体の共通レイアウトです。
 
@@ -63,7 +101,19 @@ Next.js の画面や全体設定を置くディレクトリです。
 - ページタイトルや説明文などのメタデータ設定
 - `globals.css` の読み込み
 
-### app/globals.css
+### docs/
+
+学習用の説明や、実装時の判断理由を残すディレクトリです。
+
+### docs/PROJECT_STRUCTURE.md
+
+各ディレクトリとファイルの役割を説明します。
+
+### docs/IMPLEMENTATION_NOTES.md
+
+機能追加や不具合修正について、変更内容・理由・採用方法・代替案・確認結果を記録します。
+今後の実装では、判断を伴う変更ごとに追記します。
+## app/globals.css
 
 アプリ全体に効くCSSです。
 
@@ -163,6 +213,10 @@ ToDo一覧を表示するコンポーネントです。
 
 メモ本文とは別のデータとしてToDoを扱うため、メモの情報量を増やさずにタスク管理を追加できます。
 
+### components/TodoDeleteConfirmModal.tsx
+
+ToDoやToDoリストを削除する前に表示する確認モーダルです。
+個別タスク、個別リスト、複数リストで説明文を切り替え、リスト削除時は配下タスクの件数も表示します。
 ### components/ResetConfirmModal.tsx
 
 メモやToDoを初期状態へ戻す前に表示する共通確認モーダルです。

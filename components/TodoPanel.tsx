@@ -10,6 +10,7 @@ type TodoFilter = "all" | "active" | "completed";
 
 type TodoPanelProps = {
   activeTodoCount: number;
+  allTodos: Todo[];
   allTags: string[];
   completedTodoCount: number;
   filter: TodoFilter;
@@ -20,6 +21,7 @@ type TodoPanelProps = {
   onClearCompletedTodos: () => void;
   onCreateTodo: (title: string) => void;
   onDeleteTodo: (id: string) => void;
+  onDeleteTodos: (ids: string[]) => void;
   onSetAllTodosCompleted: (completed: boolean) => void;
   onSetFilter: (filter: TodoFilter) => void;
   onToggleTodo: (id: string) => void;
@@ -35,6 +37,7 @@ const filterOptions: Array<{ label: string; value: TodoFilter }> = [
 
 export function TodoPanel({
   activeTodoCount,
+  allTodos,
   allTags,
   completedTodoCount,
   filter,
@@ -45,6 +48,7 @@ export function TodoPanel({
   onClearCompletedTodos,
   onCreateTodo,
   onDeleteTodo,
+  onDeleteTodos,
   onSetAllTodosCompleted,
   onSetFilter,
   onToggleTodo,
@@ -54,11 +58,21 @@ export function TodoPanel({
   const [todoDraft, setTodoDraft] = useState("");
   const [tagDraft, setTagDraft] = useState("");
   const [isBulkActionsOpen, setIsBulkActionsOpen] = useState(false);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedTodoIds, setSelectedTodoIds] = useState<string[]>([]);
 
   useEffect(() => {
     setTagDraft("");
     setIsBulkActionsOpen(false);
+    setIsSelectionMode(false);
+    setSelectedTodoIds([]);
   }, [todoList.id]);
+
+  useEffect(() => {
+    setSelectedTodoIds((currentIds) =>
+      currentIds.filter((id) => allTodos.some((todo) => todo.id === id)),
+    );
+  }, [allTodos]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,6 +80,33 @@ export function TodoPanel({
     setTodoDraft("");
   }
 
+  function startSelectionMode() {
+    setIsBulkActionsOpen(false);
+    setIsSelectionMode(true);
+    setSelectedTodoIds([]);
+  }
+
+  function cancelSelectionMode() {
+    setIsSelectionMode(false);
+    setSelectedTodoIds([]);
+  }
+
+  function toggleSelectedTodo(todoId: string) {
+    setSelectedTodoIds((currentIds) =>
+      currentIds.includes(todoId)
+        ? currentIds.filter((id) => id !== todoId)
+        : [...currentIds, todoId],
+    );
+  }
+
+  function requestDeleteSelectedTodos() {
+    if (selectedTodoIds.length === 0) {
+      return;
+    }
+
+    onDeleteTodos(selectedTodoIds);
+    cancelSelectionMode();
+  }
   function addTag() {
     const nextTag = tagDraft.trim();
 
@@ -190,59 +231,48 @@ export function TodoPanel({
               </button>
             ))}
           </div>
-          {activeTodoCount + completedTodoCount > 0 && (
+          {isSelectionMode ? (
+            <>
+              <span className={`rounded-md border px-3 py-2 text-xs ${isDark ? "border-[#3a3a3a] bg-[#242424] text-[#d6d6d6]" : "border-[#ded9d1] bg-[#f7f7f5] text-[#5f5a52]"}`}>
+                {selectedTodoIds.length}件選択
+              </span>
+              <button type="button" onClick={requestDeleteSelectedTodos} disabled={selectedTodoIds.length === 0} className={`rounded-md border px-3 py-2 text-xs transition disabled:cursor-default disabled:opacity-40 ${isDark ? "border-[#5a2f2f] bg-[#3a2525] text-[#f0c9c9] hover:bg-[#4a2c2c]" : "border-[#e2c1b8] bg-[#fff2ef] text-[#9a3f2f] hover:bg-[#ffe8e1]"}`}>
+                選択したToDoを削除
+              </button>
+              <button type="button" onClick={cancelSelectionMode} className={`rounded-md border px-3 py-2 text-xs transition ${isDark ? "border-[#333333] bg-[#242424] text-[#bdbdbd] hover:bg-[#2d2d2d]" : "border-[#ded9d1] bg-[#f7f7f5] text-[#6f6a62] hover:bg-[#eee9e1]"}`}>
+                解除
+              </button>
+            </>
+          ) : activeTodoCount + completedTodoCount > 0 ? (
             <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsBulkActionsOpen((isOpen) => !isOpen)}
-                className={`flex h-9 w-9 items-center justify-center rounded-md border transition ${
-                  isBulkActionsOpen
-                    ? isDark
-                      ? "border-[#444444] bg-[#303030] text-[#f1f1f1]"
-                      : "border-[#d1cbc2] bg-white text-[#37352f] shadow-sm"
-                    : isDark
-                      ? "border-[#303030] bg-[#1b1b1b] text-[#9b9b9b] hover:bg-[#303030] hover:text-[#d6d6d6]"
-                      : "border-[#ded9d1] bg-[#f7f7f5] text-[#78746d] hover:bg-white hover:text-[#4f4b45]"
-                }`}
-                title="一括操作"
-                aria-label="一括操作"
-                aria-expanded={isBulkActionsOpen}
-              >
+              <button type="button" onClick={() => setIsBulkActionsOpen((isOpen) => !isOpen)} className={`flex h-9 w-9 items-center justify-center rounded-md border transition ${isBulkActionsOpen ? isDark ? "border-[#444444] bg-[#303030] text-[#f1f1f1]" : "border-[#d1cbc2] bg-white text-[#37352f] shadow-sm" : isDark ? "border-[#303030] bg-[#1b1b1b] text-[#9b9b9b] hover:bg-[#303030] hover:text-[#d6d6d6]" : "border-[#ded9d1] bg-[#f7f7f5] text-[#78746d] hover:bg-white hover:text-[#4f4b45]"}`} title="一括操作" aria-label="一括操作" aria-expanded={isBulkActionsOpen}>
                 <BulkActionsIcon />
               </button>
-
               {isBulkActionsOpen && (
                 <div className={`absolute right-0 top-11 z-20 w-56 rounded-md border p-1 shadow-lg ${isDark ? "border-[#333333] bg-[#252525]" : "border-[#e4e1dc] bg-[#fbfaf8]"}`}>
-                  <button type="button" onClick={() => { onSetAllTodosCompleted(true); setIsBulkActionsOpen(false); }} disabled={activeTodoCount === 0} className={`flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-sm transition disabled:cursor-default disabled:opacity-40 ${isDark ? "text-[#e6e6e6] hover:bg-[#303030]" : "text-[#4f4b45] hover:bg-[#eeeae4]"}`}>
-                    <CheckAllIcon />
-                    すべて完了
-                  </button>
-                  <button type="button" onClick={() => { onSetAllTodosCompleted(false); setIsBulkActionsOpen(false); }} disabled={completedTodoCount === 0} className={`flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-sm transition disabled:cursor-default disabled:opacity-40 ${isDark ? "text-[#e6e6e6] hover:bg-[#303030]" : "text-[#4f4b45] hover:bg-[#eeeae4]"}`}>
-                    <ResetCheckIcon />
-                    すべて未完了に戻す
-                  </button>
+                  <button type="button" onClick={startSelectionMode} className={`flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-sm transition ${isDark ? "text-[#e6e6e6] hover:bg-[#303030]" : "text-[#4f4b45] hover:bg-[#eeeae4]"}`}><SelectionIcon />ToDoを選択して削除</button>
                   <div className={`my-1 border-t ${isDark ? "border-[#333333]" : "border-[#e4e1dc]"}`} />
-                  <button type="button" onClick={() => { onClearCompletedTodos(); setIsBulkActionsOpen(false); }} disabled={completedTodoCount === 0} className={`flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-sm transition disabled:cursor-default disabled:opacity-40 ${isDark ? "text-[#e8b2b2] hover:bg-[#3a2b2b]" : "text-[#a34838] hover:bg-[#fff0ec]"}`}>
-                    <TrashIcon />
-                    完了したToDoを削除
-                  </button>
+                  <button type="button" onClick={() => { onSetAllTodosCompleted(true); setIsBulkActionsOpen(false); }} disabled={activeTodoCount === 0} className={`flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-sm transition disabled:cursor-default disabled:opacity-40 ${isDark ? "text-[#e6e6e6] hover:bg-[#303030]" : "text-[#4f4b45] hover:bg-[#eeeae4]"}`}><CheckAllIcon />すべて完了</button>
+                  <button type="button" onClick={() => { onSetAllTodosCompleted(false); setIsBulkActionsOpen(false); }} disabled={completedTodoCount === 0} className={`flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-sm transition disabled:cursor-default disabled:opacity-40 ${isDark ? "text-[#e6e6e6] hover:bg-[#303030]" : "text-[#4f4b45] hover:bg-[#eeeae4]"}`}><ResetCheckIcon />すべて未完了に戻す</button>
+                  <div className={`my-1 border-t ${isDark ? "border-[#333333]" : "border-[#e4e1dc]"}`} />
+                  <button type="button" onClick={() => { onClearCompletedTodos(); setIsBulkActionsOpen(false); }} disabled={completedTodoCount === 0} className={`flex w-full items-center gap-2.5 rounded px-3 py-2 text-left text-sm transition disabled:cursor-default disabled:opacity-40 ${isDark ? "text-[#e8b2b2] hover:bg-[#3a2b2b]" : "text-[#a34838] hover:bg-[#fff0ec]"}`}><TrashIcon />完了したToDoを削除</button>
                 </div>
               )}
             </div>
-          )}
+          ) : null}
         </div>
-
-
-
         <div className="space-y-2">
           {todos.length > 0 ? (
             todos.map((todo) => (
               <TodoRow
                 key={todo.id}
                 isDark={isDark}
+                isSelected={selectedTodoIds.includes(todo.id)}
+                isSelectionMode={isSelectionMode}
                 todo={todo}
                 onDelete={() => onDeleteTodo(todo.id)}
                 onToggle={() => onToggleTodo(todo.id)}
+                onToggleSelect={() => toggleSelectedTodo(todo.id)}
               />
             ))
           ) : (
@@ -262,6 +292,9 @@ export function TodoPanel({
   );
 }
 
+function SelectionIcon() {
+  return <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3.5" y="3.5" width="13" height="13" rx="2.5" /><path d="m12.5 11.5 7.5 3.2-3.2 1.2-1.2 3.2-3.1-7.6Z" /></svg>;
+}
 function BulkActionsIcon() {
   return <svg aria-hidden="true" className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m4 6 1.5 1.5L8 5" /><path d="M11 6h9" /><path d="m4 12 1.5 1.5L8 11" /><path d="M11 12h9" /><path d="m4 18 1.5 1.5L8 17" /><path d="M11 18h9" /></svg>;
 }
@@ -276,67 +309,20 @@ function CheckAllIcon() {
 function ResetCheckIcon() {
   return <svg aria-hidden="true" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.9"><rect x="4" y="4" width="16" height="16" rx="3" /><path d="M8 12h8" /></svg>;
 }
-function TodoRow({ isDark, todo, onDelete, onToggle }: { isDark: boolean; todo: Todo; onDelete: () => void; onToggle: () => void }) {
+function TodoRow({ isDark, isSelected, isSelectionMode, todo, onDelete, onToggle, onToggleSelect }: { isDark: boolean; isSelected: boolean; isSelectionMode: boolean; todo: Todo; onDelete: () => void; onToggle: () => void; onToggleSelect: () => void }) {
+  const isChecked = isSelectionMode ? isSelected : todo.completed;
+
   return (
-    <div
-      className={`group flex items-start gap-3 rounded-md border px-3 py-3 transition ${
-        isDark
-          ? "border-[#303030] bg-[#1f1f1f] hover:bg-[#242424]"
-          : "border-[#e4e1dc] bg-[#fbfaf8] hover:bg-[#f2eee8]"
-      }`}
-    >
-      <button
-        type="button"
-        onClick={onToggle}
-        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition ${
-          todo.completed
-            ? isDark
-              ? "border-[#666666] bg-[#3a3a3a] text-[#f1f1f1]"
-              : "border-[#b9b2a7] bg-white text-[#37352f]"
-            : isDark
-              ? "border-[#444444] text-transparent hover:border-[#666666]"
-              : "border-[#d6d0c8] text-transparent hover:border-[#b9b2a7]"
-        }`}
-        aria-pressed={todo.completed}
-        aria-label="完了状態を切り替え"
-      >
-        ✓
-      </button>
+    <div className={`group flex items-start gap-3 rounded-md border px-3 py-3 transition ${isDark ? "border-[#303030] bg-[#1f1f1f] hover:bg-[#242424]" : "border-[#e4e1dc] bg-[#fbfaf8] hover:bg-[#f2eee8]"}`}>
+      <button type="button" onClick={isSelectionMode ? onToggleSelect : onToggle} className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition ${isChecked ? isDark ? "border-[#666666] bg-[#3a3a3a] text-[#f1f1f1]" : "border-[#b9b2a7] bg-white text-[#37352f]" : isDark ? "border-[#444444] text-transparent hover:border-[#666666]" : "border-[#d6d0c8] text-transparent hover:border-[#b9b2a7]"}`} aria-pressed={isChecked} aria-label={isSelectionMode ? "ToDoを選択" : "完了状態を切り替え"}>✓</button>
       <div className="min-w-0 flex-1">
-        <p
-          className={`break-words text-sm leading-6 ${
-            todo.completed
-              ? isDark
-                ? "text-[#8f8f8f] line-through"
-                : "text-[#8a857d] line-through"
-              : isDark
-                ? "text-[#ededed]"
-                : "text-[#37352f]"
-          }`}
-        >
-          {todo.title}
-        </p>
-        <p className={`mt-1 text-xs ${isDark ? "text-[#777777]" : "text-[#9b968e]"}`}>
-          更新: {todo.updatedAt}
-        </p>
+        <p className={`break-words text-sm leading-6 ${todo.completed ? isDark ? "text-[#8f8f8f] line-through" : "text-[#8a857d] line-through" : isDark ? "text-[#ededed]" : "text-[#37352f]"}`}>{todo.title}</p>
+        <p className={`mt-1 text-xs ${isDark ? "text-[#777777]" : "text-[#9b968e]"}`}>更新: {todo.updatedAt}</p>
       </div>
-      <button
-        type="button"
-        onClick={onDelete}
-        className={`h-7 w-7 rounded text-sm opacity-100 transition md:opacity-0 md:group-hover:opacity-100 ${
-          isDark
-            ? "text-[#9b9b9b] hover:bg-[#3a3a3a] hover:text-[#f1f1f1]"
-            : "text-[#8a857d] hover:bg-[#ddd8d0] hover:text-[#37352f]"
-        }`}
-        aria-label="ToDoを削除"
-        title="ToDoを削除"
-      >
-        ×
-      </button>
+      {!isSelectionMode && <button type="button" onClick={onDelete} className={`h-7 w-7 rounded text-sm opacity-100 transition md:opacity-0 md:group-hover:opacity-100 ${isDark ? "text-[#9b9b9b] hover:bg-[#3a3a3a] hover:text-[#f1f1f1]" : "text-[#8a857d] hover:bg-[#ddd8d0] hover:text-[#37352f]"}`} aria-label="ToDoを削除" title="ToDoを削除">×</button>}
     </div>
   );
 }
-
 type TodoTagInputProps = {
   allTags: string[];
   isDark: boolean;

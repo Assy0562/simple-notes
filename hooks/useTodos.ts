@@ -334,10 +334,15 @@ export function useTodos() {
       ),
     );
   }
-  function deleteTodo(todoId: string) {
+  function deleteTodos(todoIds: string[]) {
+    const targetIds = new Set(todoIds);
     setTodos((currentTodos) =>
-      currentTodos.filter((todo) => todo.id !== todoId),
+      currentTodos.filter((todo) => !targetIds.has(todo.id)),
     );
+  }
+
+  function deleteTodo(todoId: string) {
+    deleteTodos([todoId]);
   }
 
   function clearCompletedTodos() {
@@ -363,6 +368,7 @@ export function useTodos() {
     createTodoList,
     createSampleTodoLists,
     deleteTodo,
+    deleteTodos,
     deleteTodoList,
     deleteTodoLists,
     resetTodos,
