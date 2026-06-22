@@ -163,11 +163,14 @@ types/
   todo.ts
 
 docs/
+  DEVELOPMENT_STATUS.md
   PROJECT_STRUCTURE.md
   IMPLEMENTATION_NOTES.md
 ```
 
 各ディレクトリやファイルの詳しい役割は、次のドキュメントにまとめています。
+
+[現在の開発状況](./docs/DEVELOPMENT_STATUS.md)
 
 [ディレクトリ構成と各ファイルの役割](./docs/PROJECT_STRUCTURE.md)
 
