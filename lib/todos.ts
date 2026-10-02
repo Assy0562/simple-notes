@@ -85,6 +85,13 @@ function normalizeTodoList(value: unknown): TodoList | null {
     return null;
   }
 
+  if (
+    (value.tags !== undefined && (!Array.isArray(value.tags) || !value.tags.every((tag) => typeof tag === "string"))) ||
+    (value.createdAt !== undefined && typeof value.createdAt !== "string") ||
+    (value.isPinned !== undefined && typeof value.isPinned !== "boolean") ||
+    (value.isArchived !== undefined && typeof value.isArchived !== "boolean")
+  ) return null;
+
   return {
     id: String(value.id),
     title: value.title.trim() || "無題のリスト",
@@ -121,6 +128,11 @@ function normalizeTodo(value: unknown, fallbackListId: string): Todo | null {
     return null;
   }
 
+  if (
+    (value.listId !== undefined && typeof value.listId !== "string") ||
+    (value.createdAt !== undefined && typeof value.createdAt !== "string")
+  ) return null;
+
   return {
     id: String(value.id),
     listId: typeof value.listId === "string" ? value.listId : fallbackListId,
@@ -142,12 +154,14 @@ export function parseSavedTodoData(value: string): SavedTodoData | null {
         .map((item) => normalizeTodo(item, DEFAULT_TODO_LIST_ID))
         .filter((todo): todo is Todo => todo !== null);
 
-      return todos.length > 0
+      return todos.length === parsedValue.length &&
+        new Set(todos.map((todo) => todo.id)).size === todos.length &&
+        todos.every((todo) => todo.listId === DEFAULT_TODO_LIST_ID)
         ? { lists: initialTodoLists.slice(0, 1), todos }
         : null;
     }
 
-    if (!isRecord(parsedValue)) {
+    if (!isRecord(parsedValue) || !Array.isArray(parsedValue.lists) || !Array.isArray(parsedValue.todos)) {
       return null;
     }
 
@@ -162,7 +176,8 @@ export function parseSavedTodoData(value: string): SavedTodoData | null {
       .map((item) => normalizeTodoList(item))
       .filter((list): list is TodoList => list !== null);
 
-    if (lists.length === 0) {
+    if (lists.length === 0 || lists.length !== listsSource.length ||
+      new Set(lists.map((list) => list.id)).size !== lists.length) {
       return null;
     }
 
@@ -172,6 +187,9 @@ export function parseSavedTodoData(value: string): SavedTodoData | null {
       .map((item) => normalizeTodo(item, fallbackListId))
       .filter((todo): todo is Todo => todo !== null)
       .filter((todo) => listIds.has(todo.listId));
+
+    if (todos.length !== todosSource.length ||
+      new Set(todos.map((todo) => todo.id)).size !== todos.length) return null;
 
     return { lists, todos };
   } catch {

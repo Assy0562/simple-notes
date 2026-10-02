@@ -1,4 +1,4 @@
-export type StorageProblem = "conflict" | "unavailable" | null;
+export type StorageProblem = "conflict" | "unavailable" | "unreadable" | null;
 
 type StorageAccess = Pick<Storage, "getItem" | "setItem">;
 type WithLock = (action: () => boolean) => Promise<boolean>;
@@ -18,6 +18,7 @@ export function createStorageGuard(
     return false;
   }
   return {
+    rejectRead() { stop("unreadable"); },
     read() {
       try {
         expected = storage.getItem(key);

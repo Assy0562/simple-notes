@@ -97,6 +97,13 @@ function normalizeNote(value: unknown): Note | null {
     return null;
   }
 
+  if (
+    (value.tags !== undefined && (!Array.isArray(value.tags) || !value.tags.every((tag) => typeof tag === "string"))) ||
+    (value.createdAt !== undefined && typeof value.createdAt !== "string") ||
+    (value.isPinned !== undefined && typeof value.isPinned !== "boolean") ||
+    (value.isArchived !== undefined && typeof value.isArchived !== "boolean")
+  ) return null;
+
   const tags = Array.isArray(value.tags)
     ? value.tags.filter((tag): tag is string => typeof tag === "string")
     : [];
@@ -126,7 +133,8 @@ export function parseSavedNotes(value: string): Note[] | null {
       .map((item) => normalizeNote(item))
       .filter((note): note is Note => note !== null);
 
-    return notes.length > 0 ? notes : null;
+    return notes.length > 0 && notes.length === parsedValue.length &&
+      new Set(notes.map((note) => note.id)).size === notes.length ? notes : null;
   } catch {
     return null;
   }

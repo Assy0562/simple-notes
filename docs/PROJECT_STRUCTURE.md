@@ -332,3 +332,5 @@ Next.jsが管理する型定義です。手で編集しません。
 - `hooks/useStorageGuard.ts`: Web Locksによる排他制御とstorage/focusイベントを接続。
 - `components/StorageWarning.tsx`: 保存停止と再読み込みの案内。
 - `tests/storage-guard.test.mjs`: 競合・同時保存・保存失敗等を確認。
+
+- `tests/saved-data.test.mjs`: 不正データの原文保持、部分的な欠損、旧形式の互換性、読込拒否後の保存停止を確認。

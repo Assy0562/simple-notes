@@ -42,7 +42,7 @@ export function useTodos() {
   useEffect(() => {
     const savedTodoData = guard.read();
 
-    if (savedTodoData) {
+    if (savedTodoData !== null) {
       const parsedTodoData = parseSavedTodoData(savedTodoData);
 
       if (parsedTodoData) {
@@ -55,6 +55,8 @@ export function useTodos() {
         setSelectedTodoListId(
           firstActiveList?.id ?? parsedTodoData.lists[0].id,
         );
+      } else {
+        guard.rejectRead();
       }
     }
 
