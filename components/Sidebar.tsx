@@ -6,6 +6,7 @@ import { NoteList } from "@/components/NoteList";
 import { ResetConfirmModal } from "@/components/ResetConfirmModal";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import type { ThemeMode } from "@/hooks/useTheme";
+import { selectNotes, type SortMode } from "@/lib/note-list";
 import type { Note } from "@/types/note";
 
 const USER_NAME_KEY = "simple-notion-user-name";
@@ -28,8 +29,6 @@ type SidebarProps = {
   onTogglePinnedNote: (id: string) => void;
   onToggleArchivedNote: (id: string) => void;
 };
-
-type SortMode = "updated-desc" | "created-desc" | "title-asc";
 
 export function Sidebar({
   isDark,
@@ -65,7 +64,6 @@ export function Sidebar({
   const [sortMode, setSortMode] = useState<SortMode>("updated-desc");
   const [isArchiveView, setIsArchiveView] = useState(false);
 
-  const normalizedSearchText = searchText.trim().toLowerCase();
   const normalizedTagFilterText = tagFilterText.trim().toLowerCase();
   const displayUserName = userName.trim() || "\u3042\u306a\u305f";
   const archivedNoteCount = notes.filter((note) => note.isArchived).length;
@@ -73,8 +71,7 @@ export function Sidebar({
   const listSourceNotes = notes.filter(
     (note) => note.isArchived === isArchiveView,
   );
-  const sortedNotes = [...listSourceNotes].sort(compareNotes);
-  const canCollapseNoteList = sortedNotes.length >= 10;
+  const canCollapseNoteList = listSourceNotes.length >= 10;
   // flatMap gathers every tag from every note into one array.
   // Set removes duplicates, so the sidebar shows each tag only once.
   const allTags = useMemo(
@@ -128,25 +125,9 @@ export function Sidebar({
     }
   }, [canCollapseNoteList, isNoteListOpen]);
 
-  // filter creates a new array and does not change the original notes data.
-  // This checks the title, content, and tags for the search text.
-  const filteredNotes = sortedNotes.filter((note) => {
-    const title = note.title.toLowerCase();
-    const content = note.content.toLowerCase();
-    const tags = note.tags.join(" ").toLowerCase();
-    // every checks that the note has all selected tags.
-    // This makes the tag filter work with two or more tags.
-    const matchesSelectedTags = selectedTags.every((tag) =>
-      note.tags.includes(tag),
-    );
-    const matchesSearchText =
-      normalizedSearchText === "" ||
-      title.includes(normalizedSearchText) ||
-      content.includes(normalizedSearchText) ||
-      tags.includes(normalizedSearchText);
-
-    return matchesSelectedTags && matchesSearchText;
-  });
+  const filteredNotes = selectNotes(
+    notes, searchText, selectedTags, sortMode, isArchiveView,
+  );
   const visibleNotes =
     canCollapseNoteList && !isNoteListOpen
       ? filteredNotes.slice(0, 10)
@@ -268,25 +249,6 @@ export function Sidebar({
     }
 
     return "\u66f4\u65b0\u304c\u65b0\u3057\u3044\u9806";
-  }
-
-  function compareNotes(firstNote: Note, secondNote: Note) {
-    if (firstNote.isPinned !== secondNote.isPinned) {
-      return firstNote.isPinned ? -1 : 1;
-    }
-
-    if (sortMode === "created-desc") {
-      return secondNote.createdAt.localeCompare(firstNote.createdAt);
-    }
-
-    if (sortMode === "title-asc") {
-      const firstTitle = firstNote.title || "\u7121\u984c\u306e\u30e1\u30e2";
-      const secondTitle = secondNote.title || "\u7121\u984c\u306e\u30e1\u30e2";
-
-      return firstTitle.localeCompare(secondTitle, "ja");
-    }
-
-    return secondNote.updatedAt.localeCompare(firstNote.updatedAt);
   }
 
   return (
