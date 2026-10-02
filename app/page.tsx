@@ -283,7 +283,9 @@ export default function Home() {
         </div>
       </div>
 
-      {appMode === "notes" ? (
+      {(appMode === "notes" ? notesStorageProblem : todosStorageProblem) === "unreadable" ? (
+        <p className="p-6">保存データを保護するため、この画面の編集を停止しています。元データは削除していません。</p>
+      ) : appMode === "notes" ? (
         <div className="min-h-[calc(100vh-57px)] md:flex">
           <div className={isMobileEditorOpen ? "hidden md:flex md:self-stretch" : "block md:flex md:self-stretch"}>
             <Sidebar

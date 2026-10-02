@@ -114,12 +114,14 @@ export function useNotes() {
   useEffect(() => {
     const savedNotes = guard.read();
 
-    if (savedNotes) {
+    if (savedNotes !== null) {
       const parsedNotes = parseSavedNotes(savedNotes);
 
       if (parsedNotes) {
         setNotes(parsedNotes);
         setSelectedNoteId(parsedNotes[0].id);
+      } else {
+        guard.rejectRead();
       }
     }
 
