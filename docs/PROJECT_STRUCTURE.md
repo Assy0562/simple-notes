@@ -325,3 +325,10 @@ Next.jsが管理する型定義です。手で編集しません。
 
 - `lib/note-list.ts`: メモ一覧の検索・タグ・アーカイブ・並び替え。`Sidebar.tsx`から呼び出す。
 - `tests/note-list.test.mjs`: 上記の関数に具体的な入力と期待する結果を渡す単体テスト。`npm test`で実行する。
+
+## 複数タブでの保存保護
+
+- `lib/storage-guard.ts`: 読み込んだ保存値との比較、競合後の保存停止。
+- `hooks/useStorageGuard.ts`: Web Locksによる排他制御とstorage/focusイベントを接続。
+- `components/StorageWarning.tsx`: 保存停止と再読み込みの案内。
+- `tests/storage-guard.test.mjs`: 競合・同時保存・保存失敗等を確認。

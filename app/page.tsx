@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { StorageWarning } from "@/components/StorageWarning";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
 import { NoteEditor } from "@/components/NoteEditor";
 import { Sidebar } from "@/components/Sidebar";
@@ -18,6 +19,7 @@ export default function Home() {
   const {
     notes,
     saveStatus,
+    storageProblem: notesStorageProblem,
     selectedNote,
     selectedNoteId,
     titleFocusRequest,
@@ -35,6 +37,7 @@ export default function Home() {
     updateSelectedNoteTags,
   } = useNotes();
   const {
+    storageProblem: todosStorageProblem,
     activeTodoCount,
     completedTodoCount,
     filter: todoFilter,
@@ -230,6 +233,7 @@ export default function Home() {
         isDark ? "bg-[#191919] text-[#ededed]" : "bg-[#f7f7f5] text-[#2f2f2f]"
       }`}
     >
+      <StorageWarning notesProblem={notesStorageProblem} todosProblem={todosStorageProblem} />
       <div
         className={`border-b px-3 py-2 ${
           isDark ? "border-[#2f2f2f] bg-[#202020]" : "border-[#e4e1dc] bg-[#f1efeb]"

@@ -1,5 +1,7 @@
 "use client";
 
+import { useStorageGuard } from "@/hooks/useStorageGuard";
+
 import { useEffect, useState } from "react";
 
 import {
@@ -105,11 +107,12 @@ export function useNotes() {
   const [notes, setNotes] = useState<Note[]>(initialNotes);
   const [selectedNoteId, setSelectedNoteId] = useState(initialNotes[0].id);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { guard, problem: storageProblem } = useStorageGuard(STORAGE_KEY);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [titleFocusRequest, setTitleFocusRequest] = useState(0);
 
   useEffect(() => {
-    const savedNotes = localStorage.getItem(STORAGE_KEY);
+    const savedNotes = guard.read();
 
     if (savedNotes) {
       const parsedNotes = parseSavedNotes(savedNotes);
@@ -117,28 +120,24 @@ export function useNotes() {
       if (parsedNotes) {
         setNotes(parsedNotes);
         setSelectedNoteId(parsedNotes[0].id);
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
       }
     }
 
     setIsLoaded(true);
-  }, []);
+  }, [guard]);
 
   useEffect(() => {
     if (!isLoaded) {
       return;
     }
 
+    let active = true;
     setSaveStatus("saving");
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-
-    const timerId = window.setTimeout(() => {
-      setSaveStatus("saved");
-    }, 300);
-
-    return () => window.clearTimeout(timerId);
-  }, [isLoaded, notes]);
+    void guard.save(JSON.stringify(notes)).then((saved) => {
+      if (active) setSaveStatus(saved ? "saved" : "idle");
+    });
+    return () => { active = false; };
+  }, [guard, isLoaded, notes]);
 
   const selectedNote =
     notes.find((note) => note.id === selectedNoteId) ??
@@ -317,7 +316,8 @@ export function useNotes() {
 
   return {
     notes,
-    saveStatus,
+    saveStatus: storageProblem ? "idle" as const : saveStatus,
+    storageProblem,
     selectedNote,
     selectedNoteId,
     titleFocusRequest,

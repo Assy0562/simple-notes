@@ -1,5 +1,7 @@
 "use client";
 
+import { useStorageGuard } from "@/hooks/useStorageGuard";
+
 import { useEffect, useMemo, useState } from "react";
 
 import { getTodayText } from "@/lib/notes";
@@ -35,9 +37,10 @@ export function useTodos() {
   const [todos, setTodos] = useState<Todo[]>(initialTodos);
   const [filter, setFilter] = useState<TodoFilter>("all");
   const [isLoaded, setIsLoaded] = useState(false);
+  const { guard, problem: storageProblem } = useStorageGuard(TODO_STORAGE_KEY);
 
   useEffect(() => {
-    const savedTodoData = localStorage.getItem(TODO_STORAGE_KEY);
+    const savedTodoData = guard.read();
 
     if (savedTodoData) {
       const parsedTodoData = parseSavedTodoData(savedTodoData);
@@ -52,24 +55,19 @@ export function useTodos() {
         setSelectedTodoListId(
           firstActiveList?.id ?? parsedTodoData.lists[0].id,
         );
-      } else {
-        localStorage.removeItem(TODO_STORAGE_KEY);
       }
     }
 
     setIsLoaded(true);
-  }, []);
+  }, [guard]);
 
   useEffect(() => {
     if (!isLoaded) {
       return;
     }
 
-    localStorage.setItem(
-      TODO_STORAGE_KEY,
-      JSON.stringify({ lists: todoLists, todos }),
-    );
-  }, [isLoaded, todoLists, todos]);
+    void guard.save(JSON.stringify({ lists: todoLists, todos }));
+  }, [guard, isLoaded, todoLists, todos]);
 
   const selectedTodoList =
     todoLists.find((list) => list.id === selectedTodoListId) ?? todoLists[0];
@@ -354,6 +352,7 @@ export function useTodos() {
   }
 
   return {
+    storageProblem,
     activeTodoCount,
     completedTodoCount,
     filter,
