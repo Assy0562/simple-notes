@@ -189,6 +189,11 @@ ReactやUIへ直接依存しないデータ処理を置きます。
 - ID生成
 - 保存済みToDoデータの検証と正規化
 
+### `lib/todo-actions.ts`
+
+- タスクの追加・完了切り替え・削除に使うデータ処理
+- `hooks/useTodos.ts`と`tests/todo-actions.test.mjs`から共通で呼び出す
+
 localStorageの値は古い形式や不正な形式の可能性があるため、フックで直接信用せず `lib/` の関数を通して読み込みます。
 
 ## types/
@@ -305,7 +310,7 @@ Next.jsが管理する型定義です。手で編集しません。
 | メモのデータ操作 | `hooks/useNotes.ts`、`lib/notes.ts`、`types/note.ts` |
 | メモ一覧・検索 | `components/Sidebar.tsx`、`components/NoteList.tsx` |
 | メモ編集 | `components/NoteEditor.tsx` |
-| ToDoのデータ操作 | `hooks/useTodos.ts`、`lib/todos.ts`、`types/todo.ts` |
+| ToDoのデータ操作 | `hooks/useTodos.ts`、`lib/todos.ts`、`lib/todo-actions.ts`、`types/todo.ts` |
 | ToDoリスト一覧 | `components/TodoSidebar.tsx` |
 | ToDoタスク操作 | `components/TodoPanel.tsx` |
 | 画面切り替え・モーダル | `app/page.tsx` |
@@ -328,6 +333,10 @@ Next.jsが管理する型定義です。手で編集しません。
 
 - `lib/note-list.ts`: メモ一覧の検索・タグ・アーカイブ・並び替え。`Sidebar.tsx`から呼び出す。
 - `tests/note-list.test.mjs`: 上記の関数に具体的な入力と期待する結果を渡す単体テスト。`npm test`で実行する。
+
+## ToDo操作の自動テスト
+
+- `tests/todo-actions.test.mjs`: タスクの追加・完了切り替え・削除の結果を確認する。画面操作と保存は対象外。
 
 ## 複数タブでの保存保護
 

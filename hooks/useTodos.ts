@@ -5,6 +5,7 @@ import { useStorageGuard } from "@/hooks/useStorageGuard";
 import { useEffect, useMemo, useState } from "react";
 
 import { getTodayText } from "@/lib/notes";
+import { createTodoItem, removeTodos, toggleTodoCompletion } from "@/lib/todo-actions";
 import {
   createTodoId,
   createTodoListId,
@@ -276,21 +277,9 @@ export function useTodos() {
   }
 
   function createTodo(title: string) {
-    const nextTitle = title.trim();
-
-    if (nextTitle === "") {
-      return;
-    }
-
     const today = getTodayText();
-    const newTodo: Todo = {
-      id: createTodoId(),
-      listId: selectedTodoList.id,
-      title: nextTitle,
-      completed: false,
-      createdAt: today,
-      updatedAt: today,
-    };
+    const newTodo = createTodoItem(title, selectedTodoList.id, createTodoId, today);
+    if (!newTodo) return;
 
     setTodos((currentTodos) => [newTodo, ...currentTodos]);
     setTodoLists((currentLists) =>
@@ -303,13 +292,7 @@ export function useTodos() {
   function toggleTodo(todoId: string) {
     const today = getTodayText();
 
-    setTodos((currentTodos) =>
-      currentTodos.map((todo) =>
-        todo.id === todoId
-          ? { ...todo, completed: !todo.completed, updatedAt: today }
-          : todo,
-      ),
-    );
+    setTodos((currentTodos) => toggleTodoCompletion(currentTodos, todoId, today));
     setTodoLists((currentLists) =>
       currentLists.map((list) =>
         list.id === selectedTodoList.id ? { ...list, updatedAt: today } : list,
@@ -335,10 +318,7 @@ export function useTodos() {
     );
   }
   function deleteTodos(todoIds: string[]) {
-    const targetIds = new Set(todoIds);
-    setTodos((currentTodos) =>
-      currentTodos.filter((todo) => !targetIds.has(todo.id)),
-    );
+    setTodos((currentTodos) => removeTodos(currentTodos, todoIds));
   }
 
   function deleteTodo(todoId: string) {
