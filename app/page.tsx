@@ -15,6 +15,7 @@ import { useTodos } from "@/hooks/useTodos";
 
 type AppMode = "notes" | "todos";
 const APP_MODE_SESSION_KEY = "simple-notes-app-mode";
+const TODO_PANEL_SESSION_KEY = "simple-notes-todo-panel-open";
 
 export default function Home() {
   const {
@@ -76,13 +77,24 @@ export default function Home() {
 
   useEffect(() => {
     try {
-      setAppMode(
-        sessionStorage.getItem(APP_MODE_SESSION_KEY) === "todos" ? "todos" : "notes",
+      const savedMode = sessionStorage.getItem(APP_MODE_SESSION_KEY);
+      setAppMode(savedMode === "todos" ? "todos" : "notes");
+      setIsMobileTodoPanelOpen(
+        savedMode === "todos" && sessionStorage.getItem(TODO_PANEL_SESSION_KEY) === "true",
       );
     } catch {
       setAppMode("notes");
     }
   }, []);
+
+  useEffect(() => {
+    if (appMode === null) return;
+    try {
+      sessionStorage.setItem(TODO_PANEL_SESSION_KEY, String(isMobileTodoPanelOpen));
+    } catch {
+      // 保存領域が使えなくても、画面内の移動は続ける。
+    }
+  }, [appMode, isMobileTodoPanelOpen]);
 
   const deleteTargetNotes = useMemo(
     () => notes.filter((note) => deleteTargetIds.includes(note.id)),

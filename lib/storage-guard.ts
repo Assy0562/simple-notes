@@ -18,6 +18,7 @@ export function createStorageGuard(
     return false;
   }
   return {
+    isBlocked() { return blocked; },
     rejectRead() { stop("unreadable"); },
     read() {
       try {

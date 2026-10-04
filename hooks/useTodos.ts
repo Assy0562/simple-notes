@@ -9,6 +9,7 @@ import { createTodoItem, removeTodos, toggleTodoCompletion } from "@/lib/todo-ac
 import {
   createTodoId,
   createTodoListId,
+  getRestoredTodoListId,
   initialTodoLists,
   initialTodos,
   parseSavedTodoData,
@@ -17,6 +18,7 @@ import {
 import type { Todo, TodoList } from "@/types/todo";
 
 type TodoFilter = "all" | "active" | "completed";
+const SELECTED_TODO_LIST_SESSION_KEY = "simple-notes-selected-todo-list";
 const sampleTodoData = [
   { title: "週末の買い物", tags: ["生活", "買い物"], todos: [{ title: "牛乳と卵を買う", completed: false }, { title: "洗剤の残量を確認する", completed: true }, { title: "来週分のコーヒー豆を選ぶ", completed: false }] },
   { title: "部屋の片付け", tags: ["生活", "掃除"], todos: [{ title: "机の上を整理する", completed: true }, { title: "本棚をジャンル別に並べる", completed: false }, { title: "不要な書類をまとめる", completed: false }] },
@@ -38,31 +40,46 @@ export function useTodos() {
   const [todos, setTodos] = useState<Todo[]>(initialTodos);
   const [filter, setFilter] = useState<TodoFilter>("all");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [canSaveSelection, setCanSaveSelection] = useState(false);
   const { guard, problem: storageProblem } = useStorageGuard(TODO_STORAGE_KEY);
 
   useEffect(() => {
     const savedTodoData = guard.read();
+    let savedListId: string | null = null;
+    try {
+      savedListId = sessionStorage.getItem(SELECTED_TODO_LIST_SESSION_KEY);
+    } catch {
+      // 保存領域が使えなくても、先頭のリストから利用を続ける。
+    }
 
     if (savedTodoData !== null) {
       const parsedTodoData = parseSavedTodoData(savedTodoData);
 
       if (parsedTodoData) {
-        const firstActiveList = parsedTodoData.lists.find(
-          (list) => !list.isArchived,
-        );
-
         setTodoLists(parsedTodoData.lists);
         setTodos(parsedTodoData.todos);
         setSelectedTodoListId(
-          firstActiveList?.id ?? parsedTodoData.lists[0].id,
+          getRestoredTodoListId(parsedTodoData.lists, savedListId),
         );
       } else {
         guard.rejectRead();
       }
+    } else {
+      setSelectedTodoListId(getRestoredTodoListId(initialTodoLists, savedListId));
     }
 
+    setCanSaveSelection(!guard.isBlocked());
     setIsLoaded(true);
   }, [guard]);
+
+  useEffect(() => {
+    if (!isLoaded || !canSaveSelection) return;
+    try {
+      sessionStorage.setItem(SELECTED_TODO_LIST_SESSION_KEY, selectedTodoListId);
+    } catch {
+      // 保存領域が使えなくても、リストの選択は続ける。
+    }
+  }, [canSaveSelection, isLoaded, selectedTodoListId]);
 
   useEffect(() => {
     if (!isLoaded) {
