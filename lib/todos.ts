@@ -56,6 +56,14 @@ export const initialTodos: Todo[] = [
   },
 ];
 
+export function getRestoredTodoListId(lists: TodoList[], savedId: string | null): string {
+  return (
+    lists.find((list) => list.id === savedId && !list.isArchived)?.id ??
+    lists.find((list) => !list.isArchived)?.id ??
+    lists[0].id
+  );
+}
+
 export function createTodoId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();

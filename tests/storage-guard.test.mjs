@@ -66,6 +66,7 @@ test('メモとToDoの保存は独立している', async () => {
 });
 test('初回保存と同じ値の再保存が成功する', async () => {
   const { tab } = setup(null); const a = tab(); a.read();
+  assert.equal(a.isBlocked(), false);
   assert.equal(await a.save('initial'), true); assert.equal(await a.save('initial'), true);
 });
 test('未読込の状態では保存しない', async () => {
@@ -86,5 +87,6 @@ test('読込失敗時は初期データを保存しない', async () => {
   const guard = createStorageGuard('notes', {
     getItem: () => { throw new Error('denied'); }, setItem: () => { writes++; },
   }, async action => action(), () => {});
-  guard.read(); assert.equal(await guard.save('defaults'), false); assert.equal(writes, 0);
+  guard.read(); assert.equal(guard.isBlocked(), true);
+  assert.equal(await guard.save('defaults'), false); assert.equal(writes, 0);
 });
