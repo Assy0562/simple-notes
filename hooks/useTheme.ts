@@ -46,7 +46,7 @@ export function useTheme() {
     }
 
     localStorage.setItem(THEME_KEY, themeMode);
-    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+    document.documentElement.dataset.theme = isDark ? "dark" : "light";
   }, [isDark, isLoaded, themeMode]);
 
   return {
