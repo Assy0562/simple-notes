@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { getTodayText } from "@/lib/notes";
 import { createTodoItem, removeTodos, toggleTodoCompletion } from "@/lib/todo-actions";
+import { archiveTodoLists, removeTodoLists, removeTodosInLists, toggleTodoListPinned } from "@/lib/todo-list-actions";
 import {
   createTodoId,
   createTodoListId,
@@ -189,22 +190,16 @@ export function useTodos() {
     }
 
     setTodoLists((currentLists) => {
-      const nextLists = currentLists.map((list) =>
-        todoListIds.includes(list.id)
-          ? { ...list, isArchived, updatedAt: getTodayText() }
-          : list,
+      const result = archiveTodoLists(
+        currentLists, todoListIds, isArchived, selectedTodoListId, getTodayText(),
       );
 
       if (todoListIds.includes(selectedTodoListId)) {
-        const nextVisibleList = nextLists.find(
-          (list) => list.isArchived !== isArchived,
-        );
-
-        setSelectedTodoListId(nextVisibleList?.id ?? nextLists[0].id);
+        setSelectedTodoListId(result.selectedId);
         setFilter("all");
       }
 
-      return nextLists;
+      return result.lists;
     });
   }
 
@@ -220,15 +215,7 @@ export function useTodos() {
 
   function togglePinnedTodoList(todoListId: string) {
     setTodoLists((currentLists) =>
-      currentLists.map((list) =>
-        list.id === todoListId
-          ? {
-              ...list,
-              isPinned: !list.isPinned,
-              updatedAt: getTodayText(),
-            }
-          : list,
-      ),
+      toggleTodoListPinned(currentLists, todoListId, getTodayText()),
     );
   }
 
@@ -266,25 +253,14 @@ export function useTodos() {
     setFilter("all");
   }
   function deleteTodoLists(todoListIds: string[]) {
-    if (
-      todoListIds.length === 0 ||
-      todoLists.length - todoListIds.length < 1
-    ) {
-      return;
-    }
+    const result = removeTodoLists(todoLists, todoListIds, selectedTodoListId);
+    if (!result) return;
 
-    const nextLists = todoLists.filter(
-      (list) => !todoListIds.includes(list.id),
-    );
+    setTodoLists(result.lists);
+    setTodos((currentTodos) => removeTodosInLists(currentTodos, todoListIds));
 
-    setTodoLists(nextLists);
-    setTodos((currentTodos) =>
-      currentTodos.filter((todo) => !todoListIds.includes(todo.listId)),
-    );
-
-    if (todoListIds.includes(selectedTodoListId)) {
-      const nextActiveList = nextLists.find((list) => !list.isArchived);
-      setSelectedTodoListId(nextActiveList?.id ?? nextLists[0].id);
+    if (result.selectedId !== selectedTodoListId) {
+      setSelectedTodoListId(result.selectedId);
       setFilter("all");
     }
   }
