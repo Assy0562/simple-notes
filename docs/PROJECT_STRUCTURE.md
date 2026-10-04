@@ -196,6 +196,11 @@ ReactやUIへ直接依存しないデータ処理を置きます。
 - タスクの追加・完了切り替え・削除に使うデータ処理
 - `hooks/useTodos.ts`と`tests/todo-actions.test.mjs`から共通で呼び出す
 
+### `lib/todo-list-actions.ts`
+
+- ToDoリストのアーカイブ・ピン留め・削除を行うデータ処理
+- `hooks/useTodos.ts`と`tests/todo-list-actions.test.mjs`から共通で呼び出す
+
 localStorageの値は古い形式や不正な形式の可能性があるため、フックで直接信用せず `lib/` の関数を通して読み込みます。
 
 ## types/
@@ -339,6 +344,7 @@ Next.jsが管理する型定義です。手で編集しません。
 ## ToDo操作の自動テスト
 
 - `tests/todo-actions.test.mjs`: タスクの追加・完了切り替え・削除の結果を確認する。画面操作と保存は対象外。
+- `tests/todo-list-actions.test.mjs`: リストのアーカイブ・ピン留め・削除と、選択先・配下タスクの扱いを確認する。
 - `tests/todo-selection.test.mjs`: 選択中リストの復元先と削除・アーカイブ後の代替先を確認する。
 
 ## 複数タブでの保存保護
