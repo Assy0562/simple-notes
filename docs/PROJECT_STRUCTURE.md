@@ -7,6 +7,7 @@
 
 ```txt
 simple-memo/
+├─ .github/       Pull Request時の自動チェック
 ├─ app/           Next.jsのページと全体スタイル
 ├─ components/    画面を構成するUI
 ├─ hooks/         状態管理とlocalStorage保存
@@ -33,6 +34,8 @@ localStorageへ自動保存
 ```
 
 読み込み時は `lib/` の関数がlocalStorageのデータを安全な形式へ整えます。
+
+`.github/workflows/checks.yml`は、`main`向けPull Requestで依存パッケージを導入し、単体テストと型チェックを実行します。
 
 ## app/
 

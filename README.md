@@ -127,7 +127,7 @@ npm run dev -- --port 3001
 npm test
 ```
 
-メモ一覧の検索・タグ絞り込み・アーカイブ・並び替えを15件の単体テストで確認します。画面操作やlocalStorageの保存、ToDoは対象外です。Node.js標準のテストランナーとTypeScript実行機能を使用します。型チェックは別途実行してください。
+メモ一覧15件、保存ガード12件、保存データの解析・保護25件（計52件）の単体テストを実行します。画面操作は対象外です。Node.js標準のテストランナーとTypeScript実行機能を使用します。型チェックは別途実行してください。
 
 実行時に `MODULE_TYPELESS_PACKAGE_JSON` 警告が出る場合があります。既存プロジェクト全体のモジュール設定を変更しないため残しており、テストの失敗ではありません。
 
@@ -140,6 +140,8 @@ npm run build
 ```
 
 現在の `lint` は、Next.js 16で `next lint` が提供されなくなったため、TypeScriptの型チェックを実行する形にしています。
+
+`main`向けのPull Requestでは、GitHub Actionsが`npm test`と`npm run typecheck`を自動実行します。結果はPull Requestの「Checks」タブで確認できます。テストが成功しても画面操作や実際のブラウザ保存まで保証するものではありません。
 
 ## ディレクトリ構成
 
