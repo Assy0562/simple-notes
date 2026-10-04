@@ -257,3 +257,7 @@ ToDoやToDoリストの削除は元に戻せず、特にリスト削除では配
 - 正常な旧メモと空の旧ToDo配列が警告なしで移行することを確認。幅390pxで警告の表示・横スクロールなしも確認。
 - requesting-code-review Skillの別AIレビュー: 修正が必要な指摘なし。
 - Safari/Firefox、実ユーザーデータでの確認、自動修復は未実施。
+
+## 2026-10-04: Pull Requestの自動チェック
+
+`main`向けPull Requestを開くと、GitHub Actionsがロックファイルに従って依存パッケージを導入し、`npm test`と`npm run typecheck`を実行する。既存のテストと型チェックを利用し、追加のテスト用パッケージは導入しない。画面操作やブラウザ保存の確認は引き続き手動で行う。
