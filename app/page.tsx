@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { StorageWarning } from "@/components/StorageWarning";
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal";
@@ -14,6 +14,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useTodos } from "@/hooks/useTodos";
 
 type AppMode = "notes" | "todos";
+const APP_MODE_SESSION_KEY = "simple-notes-app-mode";
 
 export default function Home() {
   const {
@@ -67,11 +68,21 @@ export default function Home() {
     updateSelectedTodoListTitle,
   } = useTodos();
   const { isDark, setThemeMode, themeMode } = useTheme();
-  const [appMode, setAppMode] = useState<AppMode>("notes");
+  const [appMode, setAppMode] = useState<AppMode | null>(null);
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [todoDeleteTarget, setTodoDeleteTarget] = useState<{ kind: "todo" | "list"; ids: string[] } | null>(null);
   const [isMobileEditorOpen, setIsMobileEditorOpen] = useState(false);
   const [isMobileTodoPanelOpen, setIsMobileTodoPanelOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      setAppMode(
+        sessionStorage.getItem(APP_MODE_SESSION_KEY) === "todos" ? "todos" : "notes",
+      );
+    } catch {
+      setAppMode("notes");
+    }
+  }, []);
 
   const deleteTargetNotes = useMemo(
     () => notes.filter((note) => deleteTargetIds.includes(note.id)),
@@ -185,6 +196,11 @@ export default function Home() {
   }
   function changeAppMode(nextMode: AppMode) {
     setAppMode(nextMode);
+    try {
+      sessionStorage.setItem(APP_MODE_SESSION_KEY, nextMode);
+    } catch {
+      // 保存領域が使えない場合も、画面の切り替えは続ける。
+    }
     setIsMobileEditorOpen(false);
     setIsMobileTodoPanelOpen(false);
   }
@@ -226,6 +242,8 @@ export default function Home() {
 
     setDeleteTargetIds([]);
   }
+
+  if (appMode === null) return null;
 
   return (
     <main
