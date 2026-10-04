@@ -57,11 +57,11 @@ Next.js App Routerのページとアプリ全体の設定を置きます。
 
 ### `app/layout.tsx`
 
-全ページ共通のHTML構造、メタデータ、`globals.css`の読み込みを担当します。
+全ページ共通のHTML構造、メタデータ、`globals.css`の読み込みを担当します。画面描画前に保存済みのテーマをHTMLへ反映します。
 
 ### `app/globals.css`
 
-Tailwind CSSの読み込みと、リッチテキストエディタを含む全体共通スタイルを定義します。
+Tailwind CSSの読み込みと、再読み込み中の背景・リッチテキストエディタを含む全体共通スタイルを定義します。
 
 ## components/
 
