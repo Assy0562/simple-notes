@@ -30,6 +30,12 @@ test("ToDoを追加・完了し、再読み込み後も状態が残る", async (
   const row = page.locator("div.group").filter({ hasText: "保存を確認するタスク" });
   await row.getByRole("button", { name: "完了状態を切り替え" }).click();
   await expect(row.getByRole("button", { name: "完了状態を切り替え" })).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem("simple-notes-todos-ja-v1") ?? "{}");
+    return saved.todos?.some((todo: { title: string; completed: boolean }) =>
+      todo.title === "保存を確認するタスク" && todo.completed,
+    ) ?? false;
+  })).toBe(true);
 
   await page.reload();
   await expect(page.getByRole("button", { name: "ToDo", exact: true })).toHaveAttribute("aria-pressed", "true");
