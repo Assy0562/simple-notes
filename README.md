@@ -145,7 +145,9 @@ npm run build
 
 現在の `lint` は、Next.js 16で `next lint` が提供されなくなったため、TypeScriptの型チェックを実行する形にしています。
 
-`main`向けのPull Requestでは、GitHub Actionsが`npm test`と`npm run typecheck`を自動実行します。結果はPull Requestの「Checks」タブで確認できます。テストが成功しても画面操作や実際のブラウザ保存まで保証するものではありません。
+画面操作の自動テストは、初回に `npx playwright install chromium` でテスト用ブラウザを入れてから `npm run test:e2e` で実行します。ローカルサーバーを自動で起動し、独立したブラウザの保存領域でメモとToDoの基本操作・再読み込み後の状態を確認します。普段使っているChromeのデータには触れません。
+
+`main`向けのPull Requestでは、GitHub Actionsが`npm test`、`npm run typecheck`、`npm run test:e2e`を自動実行します。結果はPull Requestの「Checks」タブで確認できます。自動テストの対象外となる画面やブラウザの動作は、必要に応じて手動で確認してください。
 
 ## ディレクトリ構成
 

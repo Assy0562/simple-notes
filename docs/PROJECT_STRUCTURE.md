@@ -14,6 +14,8 @@ simple-memo/
 ├─ lib/           初期データとデータ変換
 ├─ types/         TypeScriptのデータ型
 ├─ docs/          開発資料
+├─ e2e/           ブラウザ画面操作の自動テスト
+├─ tests/         データ処理の単体テスト
 ├─ AGENTS.md      AIと作業するときのルール
 ├─ README.md      アプリ概要と利用方法
 └─ 設定ファイル
@@ -35,7 +37,7 @@ localStorageへ自動保存
 
 読み込み時は `lib/` の関数がlocalStorageのデータを安全な形式へ整えます。
 
-`.github/workflows/checks.yml`は、`main`向けPull Requestで依存パッケージを導入し、単体テストと型チェックを実行します。
+`.github/workflows/checks.yml`は、`main`向けPull Requestで依存パッケージを導入し、単体テスト、型チェック、ブラウザ画面操作のテストを実行します。`playwright.config.ts`が画面操作テスト用のローカルサーバーを起動します。
 
 ## app/
 

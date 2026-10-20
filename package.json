@@ -5,7 +5,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "npm run typecheck",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@tailwindcss/postcss": "latest",
@@ -21,6 +22,7 @@
     "tailwindcss": "latest"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
